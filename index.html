@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fluxo | Single Source of Truth</title>
+
+    <!-- Fonte Inter (Padrão UI Clean B2B) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- GSAP & Lenis -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
+
+    <style>
+        :root {
+            --bg-base: #000000;
+            --bg-elevated: #09090b; /* Levemente mais escuro que o padrão para contraste */
+            --border-subtle: rgba(255, 255, 255, 0.1);
+            --border-hover: rgba(255, 255, 255, 0.2);
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --accent-purple: #9333ea;
+            --accent-cyan: #06b6d4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        body { background: var(--bg-base); color: var(--text-main); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-base); }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 5vw; position: relative; z-index: 10; }
+
+        /* ================= 1. BACKGROUND PERSPECTIVE GRID ================= */
+        .grid-bg {
+            position: fixed; width: 200vw; height: 200vh; top: -50%; left: -50%;
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 60px 60px; z-index: 0; pointer-events: none;
+            transform: perspective(1000px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+            mask-image: radial-gradient(circle at center, black 10%, transparent 60%);
+            -webkit-mask-image: radial-gradient(circle at center, black 10%, transparent 60%);
+        }
+
+        /* ================= 2. HERO SECTION ================= */
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; position: relative; padding-top: 5vh; }
+        
+        .badge {
+            display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px;
+            background: rgba(147, 51, 234, 0.08); border: 1px solid rgba(147, 51, 234, 0.2);
+            border-radius: 100px; font-size: 0.85rem; font-weight: 500; color: #d8b4fe;
+            margin-bottom: 2rem;
+        }
+        .badge-dot { width: 6px; height: 6px; background: #a855f7; border-radius: 50%; box-shadow: 0 0 10px #a855f7; }
+
+        .title-massive { font-size: clamp(3rem, 7vw, 6rem); font-weight: 700; letter-spacing: -0.04em; line-height: 1.05; margin-bottom: 1.5rem; }
+        .text-gradient { background: linear-gradient(135deg, #ffffff 0%, #71717a 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-desc { font-size: clamp(1.1rem, 2vw, 1.25rem); color: var(--text-muted); max-width: 640px; line-height: 1.6; margin-bottom: 3rem; }
+
+        .btn-primary {
+            position: relative; padding: 14px 28px; background: #fff; color: #000;
+            border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer;
+            border: none; transition: transform 0.2s ease, background 0.2s ease;
+        }
+        .btn-primary:hover { transform: translateY(-2px); background: #f4f4f5; }
+
+        /* ================= 3. PRODUCT DEMO SCROLL (A GRANDE MUDANÇA) ================= */
+        .demo-section { display: flex; padding: 100px 0; gap: 5vw; position: relative; align-items: flex-start; }
+        
+        .demo-text-col { width: 45%; padding-bottom: 30vh; }
+        
+        .demo-step { min-height: 60vh; display: flex; flex-direction: column; justify-content: center; opacity: 0.3; transition: opacity 0.5s ease; }
+        .demo-step.is-active { opacity: 1; }
+        .demo-step h3 { font-size: 2.5rem; font-weight: 600; margin-bottom: 20px; letter-spacing: -0.03em; color: #fff; }
+        .demo-step p { font-size: 1.15rem; color: var(--text-muted); line-height: 1.6; }
+
+        /* Mockup Fixo (Sticky) */
+        .demo-visual-col { width: 55%; position: sticky; top: 15vh; height: 70vh; }
+        
+        .mock-app {
+            background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+            border-radius: 12px; height: 100%; display: flex; flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.02) inset;
+            overflow: hidden;
+        }
+        
+        /* Header do App (Mac Style) */
+        .mock-header { height: 48px; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; padding: 0 16px; gap: 8px; }
+        .mock-dot { width: 12px; height: 12px; border-radius: 50%; background: #27272a; }
+        .mock-dot:nth-child(1) { background: #ef4444; } .mock-dot:nth-child(2) { background: #eab308; } .mock-dot:nth-child(3) { background: #22c55e; }
+        
+        .mock-body { display: flex; flex: 1; overflow: hidden; }
+        
+        /* Sidebar do App */
+        .mock-sidebar { width: 220px; border-right: 1px solid var(--border-subtle); padding: 16px; background: rgba(0,0,0,0.2); }
+        .nav-item { padding: 10px 12px; border-radius: 6px; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 8px; transition: all 0.3s; display: flex; align-items: center; gap: 10px; }
+        .nav-item.active { background: rgba(255,255,255,0.05); color: #fff; }
+        
+        /* Conteúdo Dinâmico do App */
+        .mock-content { flex: 1; padding: 24px; position: relative; background: radial-gradient(circle at top left, rgba(255,255,255,0.02), transparent 50%); }
+        
+        /* Telas da Demo (Ocultas por padrão) */
+        .demo-screen { position: absolute; inset: 24px; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; display: flex; flex-direction: column; gap: 20px; }
+        .demo-screen.is-visible { opacity: 1; }
+
+        /* Tela 1: Kanban */
+        .k-board { display: flex; gap: 16px; flex: 1; }
+        .k-col { flex: 1; background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px; }
+        .k-col-title { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; }
+        .k-card { background: rgba(255,255,255,0.05); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 12px; margin-bottom: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .k-card-tag { width: 40px; height: 6px; border-radius: 3px; background: var(--accent-purple); margin-bottom: 8px; }
+        .k-card-title { height: 10px; background: rgba(255,255,255,0.2); border-radius: 3px; width: 80%; margin-bottom: 6px;}
+        
+        /* Animação do Card do Kanban na Demo */
+        .k-card-animated { transform: translateY(0); transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 1s; }
+        .is-active-step-2 .k-card-animated { transform: translate(110%, 0); background: rgba(6, 182, 212, 0.1); border-color: var(--accent-cyan); box-shadow: 0 0 20px rgba(6,182,212,0.2); }
+
+        /* Tela 2: Pomodoro */
+        .pomodoro-view { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        .p-circle { position: relative; width: 180px; height: 180px; display: flex; align-items: center; justify-content: center; }
+        .p-svg { position: absolute; inset: 0; transform: rotate(-90deg); width: 100%; height: 100%; }
+        .p-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 8; }
+        .p-progress { fill: none; stroke: var(--accent-purple); stroke-width: 8; stroke-linecap: round; stroke-dasharray: 502; stroke-dashoffset: 502; transition: stroke-dashoffset 2s cubic-bezier(0.25, 1, 0.5, 1); }
+        .is-active-step-3 .p-progress { stroke-dashoffset: 150; } /* Simula o timer enchendo */
+        .p-time { font-family: monospace; font-size: 2.5rem; font-weight: 700; }
+        .p-status { margin-top: 24px; padding: 8px 16px; background: rgba(147, 51, 234, 0.1); color: #d8b4fe; border-radius: 100px; font-size: 0.9rem; border: 1px solid rgba(147, 51, 234, 0.3); }
+
+        /* Tela 3: Vault */
+        .v-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .v-item { background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); padding: 16px; border-radius: 8px; display: flex; align-items: flex-start; gap: 12px; }
+        .v-icon { width: 32px; height: 32px; background: rgba(255,255,255,0.05); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: monospace; color: var(--accent-cyan); }
+        .v-info div:first-child { font-size: 0.9rem; font-weight: 500; margin-bottom: 4px; }
+        .v-info div:last-child { font-size: 0.8rem; color: var(--text-muted); font-family: monospace; }
+
+        /* ================= 4. BENTO BOX (Manteve os micro-detalhes, reduziu o texto) ================= */
+        .bento-section { padding: 100px 0; border-top: 1px solid var(--border-subtle); margin-top: 100px; }
+        .section-heading { text-align: center; margin-bottom: 80px; }
+        .section-heading h2 { font-size: 3rem; font-weight: 600; letter-spacing: -0.04em; }
+
+        .bento-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .bento-card {
+            background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+            border-radius: 20px; padding: 40px; position: relative; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: space-between; height: 320px;
+        }
+        .card-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 8px; }
+        .card-desc { color: var(--text-muted); line-height: 1.5; font-size: 1rem;}
+        .col-2 { grid-column: span 2; }
+
+        /* Micro-Metrics Chart */
+        .mini-chart { display: flex; align-items: flex-end; gap: 8px; height: 60px; margin-bottom: 30px; }
+        .mini-bar { flex: 1; background: rgba(255,255,255,0.08); border-radius: 4px 4px 0 0; transition: height 0.6s cubic-bezier(0.25, 1, 0.5, 1); }
+        .bento-card:hover .mini-bar:nth-child(1) { height: 40%; background: var(--accent-purple); }
+        .bento-card:hover .mini-bar:nth-child(2) { height: 75%; background: var(--accent-purple); }
+        .bento-card:hover .mini-bar:nth-child(3) { height: 100%; background: var(--accent-cyan); box-shadow: 0 0 15px rgba(6, 182, 212, 0.3); }
+        .bento-card:hover .mini-bar:nth-child(4) { height: 50%; background: rgba(255,255,255,0.2); }
+
+        /* ================= 5. NAMI AI (TERMINAL) ================= */
+        .ai-terminal-section { padding: 100px 0 150px; }
+        .terminal-container { 
+            background: rgba(10, 10, 10, 0.6); border: 1px solid var(--border-subtle); 
+            border-radius: 16px; overflow: hidden; max-width: 900px; margin: 0 auto;
+            backdrop-filter: blur(24px); box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+        }
+        .terminal-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--border-subtle); background: rgba(255,255,255,0.02); }
+        .mac-dots { display: flex; gap: 8px; }
+        .mac-dots span { width: 12px; height: 12px; border-radius: 50%; background: #333; }
+        .kbd-hint { font-family: monospace; font-size: 0.8rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); }
+        .terminal-body { padding: 40px; font-family: monospace; font-size: 1rem; color: #e4e4e7; line-height: 1.6; }
+        .prompt-line { display: flex; gap: 12px; margin-bottom: 16px; }
+        .prompt-user { color: var(--accent-purple); }
+        .ai-response { color: var(--text-muted); display: none; }
+        .cursor-blink { display: inline-block; width: 8px; height: 1.2em; background: #fff; vertical-align: middle; animation: blink 1s step-end infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        @media(max-width: 900px) {
+            .demo-section { flex-direction: column; }
+            .demo-text-col, .demo-visual-col { width: 100%; }
+            .demo-visual-col { position: relative; top: 0; height: 50vh; margin-bottom: 40px; }
+            .demo-step { min-height: auto; margin-bottom: 40px; opacity: 1; }
+            .bento-grid { grid-template-columns: 1fr; }
+            .col-2 { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="grid-bg" id="bg-grid"></div>
+
+    <!-- HERO -->
+    <header class="hero container">
+        <div class="badge"><span class="badge-dot"></span> Fluxo OS 1.0</div>
+        <h1 class="title-massive gs-up">A Única Fonte<br><span class="text-gradient">de Verdade.</span></h1>
+        <p class="hero-desc gs-up">Pare de alternar abas. Unificamos Kanban, Vault e Pomodoro em um ambiente projetado para blindar a carga cognitiva da sua engenharia.</p>
+        <button class="btn-primary gs-up">Acessar Workspace</button>
+    </header>
+
+    <!-- PRODUCT DEMO SCROLL (Substitui o antigo texto gigante) -->
+    <section class="demo-section container" id="demo-trigger">
+        
+        <!-- Lado Esquerdo (Narrativa) -->
+        <div class="demo-text-col">
+            <div class="demo-step" id="step-1">
+                <h3>O Fim do Context Switching</h3>
+                <p>Jira para tarefas, GitHub para PRs, Notion para docs. A fragmentação drena a energia da sua equipe. O Fluxo atua como um hub centralizador, eliminando o estresse ocupacional.</p>
+            </div>
+            
+            <div class="demo-step" id="step-2">
+                <h3>Fluxos de CI/CD Nativos</h3>
+                <p>Nossa gestão ágil via Kanban conversa nativamente com seu repositório. Arraste um card e veja a telemetria do seu Pull Request atualizar no background, sem tocar no Git.</p>
+            </div>
+            
+            <div class="demo-step" id="step-3">
+                <h3>O Estado de Deep Work</h3>
+                <p>Com o Pomodoro integrado, você blinda seu cérebro. O sistema bloqueia distrações externas e registra os ciclos de foco, gerando as <i>Flow Metrics</i> para a liderança.</p>
+            </div>
+
+            <div class="demo-step" id="step-4">
+                <h3>Conhecimento Criptografado</h3>
+                <p>Um cofre (Vault) direto na sua interface. Salve snippets complexos e documentações sensíveis. Tudo governado por um sistema rígido de RBAC (Role-Based Access Control).</p>
+            </div>
+        </div>
+
+        <!-- Lado Direito (Mockup Fixo UI) -->
+        <div class="demo-visual-col">
+            <div class="mock-app">
+                <div class="mock-header">
+                    <div class="mock-dot"></div><div class="mock-dot"></div><div class="mock-dot"></div>
+                </div>
+                <div class="mock-body">
+                    <!-- Menu Lateral -->
+                    <div class="mock-sidebar">
+                        <div class="nav-item" id="nav-1">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg> Dashboard
+                        </div>
+                        <div class="nav-item" id="nav-2">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg> Kanban
+                        </div>
+                        <div class="nav-item" id="nav-3">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Pomodoro
+                        </div>
+                        <div class="nav-item" id="nav-4">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Vault
+                        </div>
+                    </div>
+
+                    <!-- Conteúdo Dinâmico -->
+                    <div class="mock-content" id="mock-canvas">
+                        
+                        <!-- Screen 1: Dashboard Vazio/Status -->
+                        <div class="demo-screen" id="screen-1">
+                            <div style="width: 100%; height: 120px; background: rgba(255,255,255,0.02); border: 1px dashed var(--border-subtle); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.9rem;">
+                                Selecione um módulo para iniciar o Workflow
+                            </div>
+                        </div>
+
+                        <!-- Screen 2: Kanban Action -->
+                        <div class="demo-screen" id="screen-2">
+                            <div class="k-board">
+                                <div class="k-col">
+                                    <div class="k-col-title">To Do</div>
+                                    <div class="k-card k-card-animated">
+                                        <div class="k-card-tag"></div>
+                                        <div class="k-card-title"></div>
+                                        <div class="k-card-title" style="width: 50%;"></div>
+                                    </div>
+                                    <div class="k-card">
+                                        <div class="k-card-tag" style="background: var(--text-muted);"></div>
+                                        <div class="k-card-title" style="width: 90%;"></div>
+                                    </div>
+                                </div>
+                                <div class="k-col">
+                                    <div class="k-col-title">In Progress</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Screen 3: Pomodoro -->
+                        <div class="demo-screen" id="screen-3">
+                            <div class="pomodoro-view">
+                                <div class="p-circle">
+                                    <svg class="p-svg" viewBox="0 0 180 180">
+                                        <!-- Raio = 80, Circunferencia = 2 * PI * 80 = 502 -->
+                                        <circle class="p-bg" cx="90" cy="90" r="80"></circle>
+                                        <circle class="p-progress" cx="90" cy="90" r="80"></circle>
+                                    </svg>
+                                    <div class="p-time">25:00</div>
+                                </div>
+                                <div class="p-status">Deep Work Ativo • DND Mode On</div>
+                            </div>
+                        </div>
+
+                        <!-- Screen 4: Vault -->
+                        <div class="demo-screen" id="screen-4">
+                            <div class="v-grid">
+                                <div class="v-item">
+                                    <div class="v-icon">{ }</div>
+                                    <div class="v-info"><div>auth_middleware.ts</div><div>Owner: Admin</div></div>
+                                </div>
+                                <div class="v-item">
+                                    <div class="v-icon" style="color: var(--accent-purple);">🔑</div>
+                                    <div class="v-info"><div>AWS Prod Keys</div><div>Owner: Superadmin</div></div>
+                                </div>
+                                <div class="v-item">
+                                    <div class="v-icon" style="color: var(--text-muted);">📄</div>
+                                    <div class="v-info"><div>API Specs v2</div><div>Public</div></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BENTO SUMMARY -->
+    <section class="bento-section container">
+        <div class="section-heading">
+            <h2 class="text-gradient">Performance de Gestão</h2>
+        </div>
+        <div class="bento-grid">
+            <div class="bento-card col-2">
+                <div>
+                    <div class="mini-chart">
+                        <div class="mini-bar" style="height: 10%;"></div><div class="mini-bar" style="height: 20%;"></div>
+                        <div class="mini-bar" style="height: 15%;"></div><div class="mini-bar" style="height: 5%;"></div>
+                    </div>
+                    <h3 class="card-title">Flow Metrics para CTOs</h3>
+                    <p class="card-desc">Dashboards de produtividade que não geram microgerenciamento. Visão de marcos estratégicos (Milestones).</p>
+                </div>
+            </div>
+            <div class="bento-card">
+                <div>
+                    <div style="width: 48px; height: 48px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-subtle); border-radius: 8px; margin-bottom: 24px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    </div>
+                    <h3 class="card-title">RBAC Granular</h3>
+                    <p class="card-desc">Controle de acesso por papéis. Do Superadmin ao Usuário, cada view é segura e customizável.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- NAMI AI -->
+    <section class="ai-terminal-section container">
+        <div class="terminal-container">
+            <div class="terminal-header">
+                <div class="mac-dots"><span></span><span></span><span></span></div>
+                <div class="kbd-hint">⌘ K para Nami AI</div>
+            </div>
+            <div class="terminal-body">
+                <div class="prompt-line">
+                    <span class="prompt-user">~ fluxo/workspace $</span>
+                    <span>ask_nami --query "Integrar repositório Git"</span>
+                </div>
+                <div class="prompt-line ai-response" id="ai-resp">
+                    <span style="color: var(--accent-cyan);">[Nami AI]:</span> 
+                    <span id="ai-typewriter"></span><span class="cursor-blink"></span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // 1. Lenis Smooth Scroll
+        const lenis = new Lenis({ duration: 1.2, smooth: true });
+        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+        requestAnimationFrame(raf);
+
+        // 2. Parallax Grid Animado
+        const grid = document.getElementById('bg-grid');
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 15;
+            const y = (e.clientY / window.innerHeight - 0.5) * 15;
+            grid.style.transform = `perspective(1000px) rotateX(60deg) translateY(-100px) translateZ(-200px) rotateY(${x}deg) translateX(${y}px)`;
+        });
+
+        // 3. LÓGICA DO PRODUCT DEMO (SCROLL-TELLING)
+        const steps = document.querySelectorAll('.demo-step');
+        
+        steps.forEach((step, index) => {
+            ScrollTrigger.create({
+                trigger: step,
+                start: "top 50%", 
+                end: "bottom 50%",
+                onToggle: self => {
+                    if(self.isActive) {
+                        // 3.1 Ativa o Texto da Esquerda
+                        steps.forEach(s => s.classList.remove('is-active'));
+                        step.classList.add('is-active');
+
+                        // 3.2 Muda a aba ativa no Sidebar do Mockup
+                        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                        document.getElementById(`nav-${index + 1}`).classList.add('active');
+
+                        // 3.3 Muda a tela exibida dentro do Mockup
+                        document.querySelectorAll('.demo-screen').forEach(s => s.classList.remove('is-visible'));
+                        document.getElementById(`screen-${index + 1}`).classList.add('is-visible');
+
+                        // 3.4 Dispara as micro-animações das telas
+                        const canvas = document.getElementById('mock-canvas');
+                        // Reseta as classes de animação
+                        canvas.className = 'mock-content'; 
+                        // Aplica a classe correspondente ao step atual
+                        // O CSS pega isso (ex: .is-active-step-2 faz o Kanban mover, .is-active-step-3 roda o SVG)
+                        canvas.classList.add(`is-active-step-${index + 1}`);
+                    }
+                }
+            });
+        });
+
+        // 4. IA Typewriter (Mantido)
+        const textToType = " Autenticação validada. Seu painel GitHub foi sincronizado. Agora o status dos Pull Requests será espelhado na coluna Kanban do projeto automaticamente.";
+        let i = 0, aiStarted = false;
+
+        ScrollTrigger.create({
+            trigger: ".ai-terminal-section",
+            start: "top 60%",
+            onEnter: () => {
+                if(!aiStarted) {
+                    aiStarted = true;
+                    document.getElementById("ai-resp").style.display = "flex";
+                    function typeWriter() {
+                        if (i < textToType.length) {
+                            document.getElementById("ai-typewriter").innerHTML += textToType.charAt(i);
+                            i++;
+                            setTimeout(typeWriter, 20);
+                        }
+                    }
+                    setTimeout(typeWriter, 500);
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>
