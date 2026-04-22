@@ -1,0 +1,15 @@
+{
+    "editor.formatOnSave": true,
+    "files.eol": "\n",
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.expand": false,
+    "explorer.fileNesting.patterns": {
+        ".env": ".env.*, .env.local, .env.development, .env.production, .env.test, .env.example",
+        "package.json": "package-lock.json, yarn.lock, bun.lockb, bun.lock, npm-shrinkwrap.json",
+        "tsconfig.json": "tsconfig.*.json",
+        "prisma.config.ts": "prisma.config.js, prisma.config.d.ts, prisma.config.js.map",
+        "pnpm-workspace.yaml": "pnpm-lock.yaml",
+        "docker-compose.yml": "docker-compose.*.yml, compose.*.yml",
+        "README.md": "README.*, LICENSE*, CHANGELOG*, CONTRIBUTING*"
+    }
+}

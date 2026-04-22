@@ -1,0 +1,30 @@
+{
+  "name": "fluxo",
+  "version": "0.0.1",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter backend run start:dev",
+    "build": "pnpm --filter backend run build",
+    "test": "pnpm --filter backend run test",
+    "lint": "pnpm --filter backend run lint",
+    "typecheck": "pnpm --filter backend run typecheck",
+    "quality": "pnpm lint && pnpm typecheck && pnpm test",
+    "prepare": "husky",
+    "lint-staged": "lint-staged"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.1",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.4"
+  },
+  "lint-staged": {
+    "apps/backend/src/**/*.ts": [
+      "pnpm exec eslint --max-warnings=0 --config apps/backend/eslint.config.mjs"
+    ]
+  }
+}

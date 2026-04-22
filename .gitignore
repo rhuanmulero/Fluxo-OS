@@ -1,0 +1,47 @@
+node_modules/
+
+# Build outputs
+build/
+dist/
+.next/
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Sensitive local files
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.jks
+*.keystore
+
+# Logs and coverage
+*.log
+coverage/
+test-results/
+
+# Cache and temp
+.cache/
+.turbo/
+tmp/
+temp/
+
+# AI tooling local state
+.claude/
+.agents/
+.agent/
+.gemini/
+
+# IDE and OS
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
