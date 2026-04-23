@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workspace - Apple Style</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/workspace.css">
+</head>
+<body>
+
+    <!-- Fundo Aurora (Mesh Gradient) -->
+    <div class="bg-mesh">
+        <div class="gradient-blob shape-1"></div>
+        <div class="gradient-blob shape-2"></div>
+        <div class="gradient-blob shape-3"></div>
+    </div>
+
+    <!-- Container Principal -->
+    <div class="scene">
+        <div class="card glass-panel">
+            
+            <!-- Trilho de Navegação (Slider) -->
+            <div class="slider" id="viewSlider">
+                
+                <!-- ================= VISTA 1: HOME (CONVITES E OPÇÕES) ================= -->
+                <div class="view" id="view-home">
+                    <div class="header">
+                        <h2>Seus Espaços</h2>
+                        <p>Escolha como deseja começar</p>
+                    </div>
+
+                    <!-- Seção: Convites Pendentes -->
+                    <div class="section">
+                        <h3 class="section-title">Convites Pendentes</h3>
+                        
+                        <div class="list-group" id="invite-1">
+                            <div class="list-item invite-item">
+                                <div class="item-icon bg-blue">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                                </div>
+                                <div class="item-text">
+                                    <h4>Design Team</h4>
+                                    <span>Convidado por Sarah</span>
+                                </div>
+                                <div class="item-actions">
+                                    <button class="action-btn decline" onclick="handleInvite('invite-1', false)">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                    </button>
+                                    <button class="action-btn accept" onclick="handleInvite('invite-1', true)">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seção: Ações -->
+                    <div class="section">
+                        <h3 class="section-title">Outras Opções</h3>
+                        
+                        <div class="list-group">
+                            <button class="list-item nav-btn" onclick="goToView('view-code')">
+                                <div class="item-icon bg-purple">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3m-1 5h8"/></svg>
+                                </div>
+                                <div class="item-text">
+                                    <h4>Entrar com Código</h4>
+                                    <span>Use um código de 6 dígitos</span>
+                                </div>
+                                <div class="item-chevron">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+                                </div>
+                            </button>
+
+                            <div class="list-divider"></div>
+
+                            <button class="list-item nav-btn" onclick="goToView('view-create')">
+                                <div class="item-icon bg-dark">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                                </div>
+                                <div class="item-text">
+                                    <h4>Criar novo Workspace</h4>
+                                    <span>Inicie um ambiente do zero</span>
+                                </div>
+                                <div class="item-chevron">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= VISTA 2: ENTRAR COM CÓDIGO ================= -->
+                <div class="view" id="view-code">
+                    <div class="nav-bar">
+                        <button class="back-btn" onclick="goToView('view-home')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+                            Voltar
+                        </button>
+                    </div>
+
+                    <div class="header">
+                        <h2>Entrar com Código</h2>
+                        <p>Insira o código fornecido pelo admin</p>
+                    </div>
+
+                    <form class="view-form" onsubmit="event.preventDefault(); alert('Entrando no workspace...');">
+                        <div class="code-input-container">
+                            <!-- Placeholder para input de 6 dígitos -->
+                            <input type="text" class="code-input" placeholder="A1B2C3" maxlength="6" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Entrar no Espaço</button>
+                    </form>
+                </div>
+
+                <!-- ================= VISTA 3: CRIAR WORKSPACE (Placeholder) ================= -->
+                <div class="view" id="view-create">
+                    <div class="nav-bar">
+                        <button class="back-btn" onclick="goToView('view-home')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+                            Voltar
+                        </button>
+                    </div>
+
+                    <div class="header">
+                        <h2>Novo Workspace</h2>
+                        <p>Dê um nome ao seu novo espaço</p>
+                    </div>
+
+                    <form class="view-form" onsubmit="event.preventDefault(); alert('Indo para a configuração...');">
+                        <div class="form-group">
+                            <input type="text" placeholder="Ex: Acme Corp" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Continuar</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="js/workspace.js"></script>
+</body>
+</html>
