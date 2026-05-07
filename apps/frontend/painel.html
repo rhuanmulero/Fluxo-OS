@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fluxo - Workspace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Ícones via Phosphor Icons (minimalistas e elegantes) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        /* === VARIÁVEIS DE TEMA (Foco no Roxo) === */
+        :root {
+            /* Light Mode */
+            --bg-color: #F8F6FA; /* Fundo off-white com levíssimo toque de roxo */
+            --surface-color: rgba(255, 255, 255, 0.7);
+            --surface-border: rgba(255, 255, 255, 0.5);
+            --text-main: #1D1D1F;
+            --text-muted: #86868B;
+            
+            /* Paleta Roxa */
+            --accent-purple: #8B5CF6; 
+            --accent-purple-dark: #6D28D9;
+            --accent-purple-light: rgba(139, 92, 246, 0.1); /* Fundo sutil para hovers */
+            --gradient-accent: linear-gradient(135deg, var(--accent-purple-dark), #C4B5FD);
+            
+            /* Semânticas */
+            --success-color: #34C759; /* Verde Apple para sucesso */
+            
+            /* Sombras tingidas de roxo */
+            --shadow-soft: 0 8px 30px rgba(109, 40, 217, 0.04);
+            --shadow-hover: 0 14px 40px rgba(109, 40, 217, 0.08);
+            --shadow-glow: 0 8px 25px rgba(139, 92, 246, 0.4);
+        }
+
+        .dark-mode {
+            /* Dark Mode com fundo levemente "uva/roxo escuro" */
+            --bg-color: #07030F; 
+            --surface-color: rgba(23, 16, 36, 0.6);
+            --surface-border: rgba(139, 92, 246, 0.15);
+            --text-main: #F5F5F7;
+            --text-muted: #A1A1A6;
+            
+            --accent-purple-light: rgba(139, 92, 246, 0.2);
+            --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.5);
+            --shadow-hover: 0 14px 40px rgba(139, 92, 246, 0.15);
+        }
+
+        /* === RESET E BASE === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        .smooth-transition {
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* === SIDEBAR FLUTUANTE === */
+        .sidebar {
+            position: fixed;
+            top: 20px;
+            bottom: 20px;
+            left: 20px;
+            width: 80px;
+            background: var(--surface-color);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--surface-border);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 0;
+            z-index: 100;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-accent);
+            border-radius: 12px;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .nav-items {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .nav-item {
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 16px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            color: var(--accent-purple);
+            background: var(--accent-purple-light);
+            transform: scale(1.1);
+        }
+
+        .nav-bottom {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* === ÁREA PRINCIPAL === */
+        .workspace {
+            margin-left: 120px;
+            padding: 40px 40px 40px 20px;
+            width: calc(100% - 120px);
+            max-width: 1400px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 40px;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeDown 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        .greeting h1 {
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .greeting p {
+            color: var(--accent-purple);
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-theme {
+            background: var(--surface-color);
+            border: 1px solid var(--surface-border);
+            color: var(--text-main);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .btn-theme:hover {
+            transform: scale(1.05);
+            color: var(--accent-purple);
+            border-color: var(--accent-purple);
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: url('https://i.pravatar.cc/150?img=11') center/cover;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .avatar:hover {
+            border-color: var(--accent-purple);
+        }
+
+        /* === CARDS DO DASHBOARD === */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--surface-color);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--surface-border);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: var(--shadow-soft);
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-4px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-header i {
+            color: var(--accent-purple);
+        }
+
+        .task-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--accent-purple-light);
+            border: 1px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .task-item:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateX(4px);
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--accent-purple);
+            border-radius: 6px;
+            position: relative;
+        }
+
+        .checkbox:hover {
+            background-color: var(--accent-purple-light);
+        }
+
+        .task-info p {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .task-info span {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .pr-tag {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            background: var(--accent-purple-light);
+            color: var(--accent-purple);
+            font-weight: 600;
+        }
+
+        .pr-tag.success {
+            background: rgba(52, 199, 89, 0.1);
+            color: var(--success-color);
+        }
+
+        .col-span-2 {
+            grid-column: span 2;
+        }
+
+        /* === POMODORO BUTTON === */
+        .btn-pomodoro {
+            background: var(--gradient-accent);
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: var(--shadow-glow);
+            font-size: 15px;
+        }
+
+        .btn-pomodoro:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 30px rgba(139, 92, 246, 0.6);
+        }
+
+        /* === BOTÃO FLUTUANTE NAMI (IA) === */
+        .fab-nami {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--gradient-accent);
+            border: none;
+            color: white;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-glow);
+            z-index: 1000;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .fab-nami:hover {
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 0 15px 35px rgba(139, 92, 246, 0.6);
+        }
+
+        /* Animações */
+        @keyframes fadeDown {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-in {
+            animation: fadeDown 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="logo smooth-transition">F</div>
+        <div class="nav-items">
+            <i class="ph ph-squares-four nav-item active smooth-transition" title="Dashboard"></i>
+            <i class="ph ph-kanban nav-item smooth-transition" title="Projetos & Tarefas"></i>
+            <i class="ph ph-calendar-check nav-item smooth-transition" title="Rotina"></i>
+            <i class="ph ph-vault nav-item smooth-transition" title="Vault & Snippets"></i>
+            <i class="ph ph-git-pull-request nav-item smooth-transition" title="Integrações"></i>
+        </div>
+        <div class="nav-bottom">
+            <i class="ph ph-gear nav-item smooth-transition" title="Configurações"></i>
+        </div>
+    </nav>
+
+    <main class="workspace">
+        <header>
+            <div class="greeting">
+                <h1 id="greeting-text">Bom dia, Lucas</h1>
+                <p>Quarta-feira, 28 de Outubro • Foco em Deep Work</p>
+            </div>
+            <div class="user-actions">
+                <button class="btn-theme smooth-transition" onclick="toggleTheme()" title="Alternar Tema">
+                    <i class="ph ph-moon" id="theme-icon"></i>
+                </button>
+                <div class="avatar smooth-transition" title="Meu Perfil"></div>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            
+            <div class="card smooth-transition col-span-2">
+                <div class="card-header">
+                    <h2><i class="ph ph-code"></i> Em Progresso (Kanban)</h2>
+                    <i class="ph ph-dots-three text-muted" style="cursor:pointer"></i>
+                </div>
+                <ul class="task-list">
+                    <li class="task-item smooth-transition">
+                        <div class="checkbox smooth-transition"></div>
+                        <div class="task-info">
+                            <p>Refatorar Autenticação (UC01)</p>
+                            <span>Projeto: API Backend • Prioridade: Alta</span>
+                        </div>
+                    </li>
+                    <li class="task-item smooth-transition">
+                        <div class="checkbox smooth-transition"></div>
+                        <div class="task-info">
+                            <p>Implementar lógica do Pomodoro</p>
+                            <span>Projeto: App Mobile • Prioridade: Média</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card smooth-transition">
+                <div class="card-header">
+                    <h2><i class="ph ph-calendar"></i> Próximos Eventos</h2>
+                </div>
+                <ul class="task-list">
+                    <li class="task-item smooth-transition">
+                        <div class="task-info">
+                            <p>Daily Meeting</p>
+                            <span>Hoje, 10:00 - 10:15</span>
+                        </div>
+                    </li>
+                    <li class="task-item smooth-transition">
+                        <div class="task-info">
+                            <p>Planning da Sprint</p>
+                            <span>Hoje, 14:00 - 15:30</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card smooth-transition col-span-2">
+                <div class="card-header">
+                    <h2><i class="ph ph-github-logo"></i> Seus Pull Requests</h2>
+                </div>
+                <ul class="task-list">
+                    <li class="task-item smooth-transition">
+                        <div class="task-info" style="flex: 1;">
+                            <p>feat: Adiciona integração com GitLab API</p>
+                            <span>fluxo-core #42 • Atualizado há 2h</span>
+                        </div>
+                        <span class="pr-tag">Em Revisão</span>
+                    </li>
+                    <li class="task-item smooth-transition">
+                        <div class="task-info" style="flex: 1;">
+                            <p>fix: Correção de concorrência no banco</p>
+                            <span>fluxo-core #40 • Atualizado há 5h</span>
+                        </div>
+                        <span class="pr-tag success">Aprovado</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card smooth-transition" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                <h2 style="font-size: 16px; color: var(--accent-purple); font-weight: 600; margin-bottom: 12px;">Modo Foco</h2>
+                <h1 style="font-size: 48px; font-weight: 300; margin-bottom: 16px; color: var(--text-main);">25:00</h1>
+                <button class="btn-pomodoro smooth-transition">
+                    Iniciar Pomodoro
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <button class="fab-nami" title="Perguntar para a Nami">
+        <i class="ph ph-sparkle"></i>
+    </button>
+
+    <script>
+        function updateGreeting() {
+            const hour = new Date().getHours();
+            const greetingElement = document.getElementById('greeting-text');
+            let greeting = 'Boa noite';
+            
+            if (hour >= 5 && hour < 12) greeting = 'Bom dia';
+            else if (hour >= 12 && hour < 18) greeting = 'Boa tarde';
+            
+            greetingElement.innerText = `${greeting}, Desenvolvedor`;
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('theme-icon');
+            
+            body.classList.toggle('dark-mode');
+            
+            if (body.classList.contains('dark-mode')) {
+                themeIcon.classList.replace('ph-moon', 'ph-sun');
+            } else {
+                themeIcon.classList.replace('ph-sun', 'ph-moon');
+            }
+        }
+
+        function animateCards() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('animate-in');
+                }, 150 * (index + 1));
+            });
+        }
+
+        window.onload = () => {
+            updateGreeting();
+            animateCards();
+        };
+    </script>
+</body>
+</html>
