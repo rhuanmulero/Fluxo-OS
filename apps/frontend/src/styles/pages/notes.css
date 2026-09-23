@@ -1,0 +1,171 @@
+/* ==========================================================================
+   FLUXO - MÓDULO DE NOTAS & VAULT
+   ========================================================================== */
+
+.notes-container {
+    display: flex; height: 100vh; width: 100%; color: var(--text-main); overflow: hidden; position: relative;
+}
+
+.notes-main {
+    flex: 1; display: flex; flex-direction: column; overflow: hidden; background: transparent;
+}
+
+.note-form { display: flex; flex-direction: column; gap: 24px; flex: 1; }
+.note-form[hidden] { display: none; }
+
+.note-editor-group { flex: 1; }
+#note-editor-mount { flex: 1; display: flex; min-height: 0; }
+
+#note-editor-mount > .rich-text-wrapper {
+    flex: 1;
+}
+
+.drawer-header-actions { display: flex; align-items: center; gap: 4px; }
+
+#note-drawer.is-expanded { width: 100%; right: -100%; }
+#note-drawer.is-expanded.active { right: 0; }
+#note-drawer.is-expanded .drawer-content { padding: 32px 64px; }
+
+.color-option-none {
+    background: transparent;
+    border-color: var(--surface-border);
+    position: relative;
+}
+.color-option-none::after {
+    content: '';
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 14px; height: 1.5px;
+    background: var(--text-muted);
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.view-toggle { display: inline-flex; gap: 2px; padding: 3px; border-radius: 8px; background: var(--input-bg); border: 1px solid var(--input-border); }
+.view-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 6px 10px; border-radius: 6px; display: flex; align-items: center; transition: all 0.2s; }
+.view-btn:hover { color: var(--text-main); }
+.view-btn.active { background: var(--surface-bg); color: var(--text-main); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+
+.note-reader { display: flex; flex-direction: column; gap: 16px; }
+.note-reader[hidden] { display: none; }
+.note-reader-title { font-size: 22px; font-weight: 600; letter-spacing: -0.3px; line-height: 1.3; }
+.note-reader-meta { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: var(--text-muted); padding-bottom: 16px; border-bottom: 1px solid var(--surface-border); }
+.note-reader-meta span { display: inline-flex; align-items: center; gap: 5px; }
+.note-reader-body { font-size: 14px; }
+
+.notes-grid-scroll {
+    flex: 1; overflow-y: auto; padding: 32px 48px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px; align-content: start;
+}
+
+/* --- CARD DE NOTA --- */
+.note-card {
+    background: var(--surface-bg); backdrop-filter: blur(16px);
+    border: 1px solid var(--surface-border); border-radius: 16px; padding: 20px;
+    display: flex; flex-direction: column; gap: 12px; transition: all 0.2s ease;
+    cursor: pointer; position: relative; max-height: 280px; overflow: hidden;
+}
+
+.note-card:hover {
+    background: var(--surface-hover); transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.2);
+}
+
+.note-card.has-color {
+    border-top: 3px solid var(--note-color);
+    background: color-mix(in srgb, var(--note-color) 10%, var(--surface-bg));
+}
+.note-card.has-color:hover {
+    background: color-mix(in srgb, var(--note-color) 16%, var(--surface-hover));
+}
+
+.notes-grid-scroll.is-list { grid-template-columns: 1fr; gap: 10px; }
+.is-list .note-card { flex-direction: row; align-items: center; gap: 20px; max-height: none; padding: 14px 20px; }
+.is-list .note-card:hover { transform: none; }
+.is-list .note-header { flex: 0 0 260px; }
+.is-list .note-title { margin-bottom: 2px; }
+.is-list .note-content-preview { -webkit-line-clamp: 1; }
+.is-list .note-links { margin-top: 0; padding-top: 0; border-top: none; flex-wrap: nowrap; }
+.is-list .note-actions { position: static; order: 10; opacity: 1; background: transparent; padding: 0; }
+
+.note-header {
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+}
+
+.note-title {
+    font-size: 16px; font-weight: 600; color: var(--text-main);
+    line-height: 1.3; margin-bottom: 4px;
+}
+
+.note-date {
+    font-size: 11px; color: var(--text-muted);
+}
+
+.note-content-preview {
+    font-size: 13px; color: var(--text-muted); line-height: 1.5;
+    flex: 1; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* Ações flutuantes no card */
+.note-actions {
+    position: absolute; top: 16px; right: 16px; display: flex; gap: 4px;
+    opacity: 0; transition: opacity 0.2s; background: var(--modal-bg); padding: 4px; border-radius: 8px; backdrop-filter: blur(8px);
+}
+.note-card:hover .note-actions { opacity: 1; }
+
+.btn-note-action {
+    background: transparent; border: none; 
+    color: var(--text-muted); /* Era #fff que sumia no branco */
+    cursor: pointer;
+    width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+    border-radius: 6px; transition: background 0.2s, color 0.2s;
+}
+.btn-note-action:hover { 
+    background: var(--subtle-bg); 
+    color: var(--text-main); 
+}
+.btn-note-action.pinned { 
+    color: #f59e0b; /* Amarelo/Laranja visível em ambos os modos */
+}
+
+/* Tag de Vínculo com Projeto/Tarefa */
+.note-links {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;
+}
+.note-link-badge {
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 4px 8px; border-radius: 6px; display: flex; align-items: center; gap: 4px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+}
+
+.note-search {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-main);
+}
+
+.note-export { position: relative; }
+
+.note-export-menu:not([hidden]) {
+    position: absolute; top: 100%; right: 0; z-index: 30;
+    min-width: 150px; margin-top: 4px; padding: 4px;
+    border-radius: 10px;
+    background: var(--modal-bg);
+    border: 1px solid var(--surface-border);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    display: flex; flex-direction: column; gap: 2px;
+}
+
+.note-export-option {
+    background: transparent; border: none; cursor: pointer; text-align: left;
+    padding: 8px 10px; border-radius: 6px;
+    font-family: var(--font-family); font-size: 12px; color: var(--text-main);
+}
+
+.note-export-option:hover { background: var(--surface-hover); }

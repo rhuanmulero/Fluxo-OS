@@ -6,8 +6,10 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "pnpm --filter backend run start:dev",
-    "build": "pnpm --filter backend run build",
+    "dev": "pnpm --parallel --filter backend --filter frontend run dev",
+    "dev:backend": "pnpm --filter backend run dev",
+    "dev:frontend": "pnpm --filter frontend run dev",
+    "build": "pnpm -r run build",
     "test": "pnpm --filter backend run test",
     "lint": "pnpm --filter backend run lint",
     "typecheck": "pnpm --filter backend run typecheck",

@@ -1,0 +1,107 @@
+:root {
+    --hl-yellow: rgba(250, 204, 21, 0.45);
+    --hl-green: rgba(74, 222, 128, 0.4);
+    --hl-pink: rgba(244, 114, 182, 0.4);
+    --hl-blue: rgba(96, 165, 250, 0.4);
+    --callout-info: #38bdf8;
+    --callout-warning: #f59e0b;
+    --callout-success: #34d399;
+}
+
+.note-content { color: var(--text-main); line-height: 1.6; }
+
+.note-content h2 { font-size: 18px; font-weight: 600; margin: 12px 0 6px; }
+.note-content h3 { font-size: 15px; font-weight: 600; margin: 10px 0 4px; }
+.note-content ul, .note-content ol { margin: 8px 0 8px 22px; }
+.note-content li { margin: 2px 0; }
+
+.note-content blockquote {
+    margin: 10px 0;
+    padding-left: 14px;
+    border-left: 3px solid var(--surface-border);
+    color: var(--text-muted);
+}
+
+.note-content pre {
+    margin: 10px 0;
+    padding: 12px;
+    border-radius: 8px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+}
+
+.note-content code {
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: var(--subtle-bg);
+    border: 1px solid var(--input-border);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9em;
+}
+
+.note-content pre code { padding: 0; border: none; background: transparent; font-size: inherit; }
+
+.note-content a { color: var(--btn-primary-bg); text-decoration: underline; }
+
+.note-content mark { padding: 0 2px; border-radius: 3px; color: inherit; }
+.note-content mark.hl-yellow { background: var(--hl-yellow); }
+.note-content mark.hl-green { background: var(--hl-green); }
+.note-content mark.hl-pink { background: var(--hl-pink); }
+.note-content mark.hl-blue { background: var(--hl-blue); }
+
+.note-content hr {
+    margin: 14px 0;
+    border: none;
+    border-top: 1px solid var(--surface-border);
+}
+
+.note-content ul.checklist { list-style: none; margin-left: 0; padding-left: 0; }
+
+.note-content ul.checklist > li { position: relative; padding-left: 28px; }
+
+.note-content ul.checklist > li::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 0.3em;
+    width: 16px;
+    height: 16px;
+    box-sizing: border-box;
+    border: 1.5px solid var(--text-muted);
+    border-radius: 4px;
+    background: var(--input-bg);
+}
+
+.note-content ul.checklist > li.checked::before {
+    background: var(--btn-primary-bg);
+    border-color: var(--btn-primary-bg);
+}
+
+.note-content ul.checklist > li.checked::after {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: calc(0.3em + 2px);
+    width: 4px;
+    height: 8px;
+    border: solid var(--btn-primary-text);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.note-content ul.checklist > li.checked { color: var(--text-muted); text-decoration: line-through; }
+
+.note-content .callout {
+    margin: 10px 0;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border-left: 3px solid var(--callout-color, var(--surface-border));
+    background: color-mix(in srgb, var(--callout-color, var(--text-muted)) 12%, transparent);
+}
+
+.note-content .callout-info { --callout-color: var(--callout-info); }
+.note-content .callout-warning { --callout-color: var(--callout-warning); }
+.note-content .callout-success { --callout-color: var(--callout-success); }

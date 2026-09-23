@@ -1,0 +1,49 @@
+.rich-text-wrapper { border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg); overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.2s; }
+.rich-text-wrapper:focus-within { border-color: var(--text-muted); }
+.rt-toolbar { padding: 6px 8px; border-bottom: 1px solid var(--input-border); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; background: var(--subtle-bg); }
+.rt-commands { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.rt-group { display: flex; align-items: center; gap: 2px; }
+.rt-group + .rt-group { padding-left: 10px; border-left: 1px solid var(--input-border); }
+.rt-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 6px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.rt-btn:hover { background: var(--surface-border); color: var(--text-main); }
+.rt-btn:disabled { opacity: 0.35; cursor: default; }
+.rt-btn:disabled:hover { background: transparent; color: var(--text-muted); }
+.rt-editor { min-height: 180px; padding: 16px; font-size: 14px; outline: none; overflow-y: auto; }
+
+.rt-words { margin-left: auto; font-size: 11px; color: var(--text-muted); padding-right: 8px; white-space: nowrap; }
+
+.rt-editor:empty::before {
+    content: attr(data-placeholder);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.rt-editor ul.checklist > li::before { cursor: pointer; }
+
+.rt-choice-holder { position: relative; }
+
+.rt-choices:not([hidden]) {
+    position: absolute; top: 100%; left: 0; z-index: 40;
+    min-width: 150px; margin-top: 4px; padding: 4px;
+    border-radius: 10px;
+    background: var(--modal-bg);
+    border: 1px solid var(--surface-border);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    display: flex; flex-direction: column; gap: 2px;
+}
+
+.rt-choice {
+    background: transparent; border: none; cursor: pointer; text-align: left;
+    padding: 7px 10px; border-radius: 6px;
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-family); font-size: 12px; color: var(--text-main);
+}
+
+.rt-choice:hover { background: var(--surface-hover); }
+
+.rt-dot { width: 14px; height: 14px; border-radius: 4px; border: 1px solid var(--surface-border); }
+.rt-dot.hl-yellow { background: var(--hl-yellow); }
+.rt-dot.hl-green { background: var(--hl-green); }
+.rt-dot.hl-pink { background: var(--hl-pink); }
+.rt-dot.hl-blue { background: var(--hl-blue); }

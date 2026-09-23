@@ -1,0 +1,50 @@
+.roadmap-container { display: flex; height: 100%; overflow: hidden; }
+.roadmap-main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; min-width: 0; }
+
+.roadmap-progress {
+    display: flex; align-items: center; gap: 16px;
+    padding: 20px 48px; border-bottom: 1px solid var(--surface-border);
+}
+
+.roadmap-progress-bar {
+    flex: 1; height: 8px; border-radius: 100px;
+    background: var(--subtle-bg); overflow: hidden;
+}
+
+.roadmap-progress-fill {
+    height: 100%; border-radius: 100px; background: #10b981;
+    transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.roadmap-progress strong { font-size: 14px; font-variant-numeric: tabular-nums; }
+
+.stage-list { display: flex; flex-direction: column; gap: 10px; padding: 24px 48px; }
+
+.stage-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; border-radius: 12px;
+    background: var(--column-bg); border: 1px solid var(--surface-border);
+    border-left: 3px solid var(--surface-border);
+    transition: border-color 0.2s, opacity 0.2s;
+}
+
+.stage-card.is-dragging { opacity: 0.4; }
+.stage-card.status-in_progress { border-left-color: #f59e0b; }
+.stage-card.status-done { border-left-color: #10b981; }
+
+.stage-drag { color: var(--text-muted); cursor: grab; display: flex; }
+.stage-drag svg { width: 16px; height: 16px; }
+.stage-card:active .stage-drag { cursor: grabbing; }
+
+.stage-body { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.stage-body strong { font-size: 14px; font-weight: 500; }
+.stage-body span { font-size: 12px; color: var(--text-muted); }
+
+.stage-points {
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    padding: 4px 8px; border-radius: 6px; background: var(--subtle-bg);
+    white-space: nowrap;
+}
+
+.stage-status { width: 148px; flex: none; }
+.stage-status .dropdown-trigger { padding: 6px 10px; font-size: 12px; }

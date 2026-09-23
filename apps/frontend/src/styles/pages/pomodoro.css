@@ -1,0 +1,216 @@
+/* ==========================================================================
+   FLUXO - POMODORO & DEEP WORK (THEME ADAPTIVE & CLEAN)
+   ========================================================================== */
+.pomodoro-wrapper {
+    position: relative; display: flex; height: 100vh; width: 100%; overflow: hidden;
+    padding: 48px; align-items: center; justify-content: center;
+    background: transparent; 
+}
+
+/* CONTEÚDO PRINCIPAL */
+.pomodoro-content {
+    position: relative; z-index: 10; display: flex; gap: 48px; width: 100%;
+    max-width: 1200px; height: 100%; align-items: center; justify-content: center;
+}
+
+/* --- COLUNA ESQUERDA (TIMER CENTRAL) --- */
+.pomo-center { 
+    flex: 1.2; display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 600px; 
+}
+
+/* Glassmorphism Dinâmico (Usa a cor base do Light/Dark Mode) */
+.pomo-glass-panel {
+    background: var(--surface-bg);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid var(--surface-border);
+    border-radius: 32px; padding: 48px; width: 100%;
+    box-shadow: var(--shadow-glow);
+    transition: all 0.3s ease;
+}
+
+/* Header */
+.pomo-header h1 { font-size: 32px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
+.pomo-header p { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+
+/* Modos (Pill-shape) */
+.pomo-modes {
+    display: inline-flex; gap: 4px; background: var(--subtle-bg); padding: 6px;
+    border-radius: 100px; margin: 32px 0 24px 0; border: 1px solid var(--surface-border);
+}
+.pomo-mode-btn {
+    background: transparent; color: var(--text-muted); border: none; padding: 10px 24px;
+    border-radius: 100px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.pomo-mode-btn:hover { color: var(--text-main); background: var(--surface-hover); }
+.pomo-mode-btn.active { background: var(--surface-bg); color: var(--text-main); box-shadow: 0 4px 16px rgba(0,0,0,0.1); border: 1px solid var(--surface-border); }
+
+/* Display Gigante */
+.pomo-timer-display {
+    font-size: 140px; font-weight: 300; font-variant-numeric: tabular-nums;
+    letter-spacing: -6px; color: var(--text-main); line-height: 1; margin-bottom: 48px;
+    transition: text-shadow 0.4s ease, color 0.4s ease;
+}
+
+/* Controles */
+.pomo-controls { display: flex; gap: 16px; justify-content: center; margin-bottom: 32px; }
+.btn-pomo-main {
+    background: var(--btn-primary-bg); color: var(--btn-primary-text); border: none; padding: 0 48px; height: 64px;
+    border-radius: 100px; font-size: 16px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; gap: 12px; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+.btn-pomo-main:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 16px 32px rgba(0,0,0,0.2); }
+.btn-pomo-main.running { background: var(--subtle-bg); color: var(--text-main); border: 1px solid var(--surface-border); box-shadow: none;}
+.btn-pomo-main.running:hover { background: var(--surface-hover); transform: translateY(0); }
+
+.btn-pomo-icon {
+    background: var(--subtle-bg); border: 1px solid var(--surface-border); color: var(--text-main);
+    width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+    cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.btn-pomo-icon:hover { background: var(--surface-hover); transform: rotate(-45deg); }
+
+/* Select de Tarefa */
+.pomo-task-box {
+    width: 100%; background: var(--subtle-bg); border-radius: 20px; padding: 20px 24px;
+    border: 1px solid var(--surface-border); text-align: left;
+}
+.pomo-task-box label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.pomo-task-box .dropdown-trigger {
+    padding: 14px 16px; border-radius: 12px; font-size: 14px;
+}
+
+/* --- COLUNA DIREITA (MÍDIA E SETTINGS) --- */
+.pomo-side { flex: 0.8; display: flex; flex-direction: column; gap: 24px; max-width: 420px; }
+.pomo-side-panel {
+    background: var(--surface-bg); backdrop-filter: blur(40px) saturate(150%);
+    -webkit-backdrop-filter: blur(40px) saturate(150%);
+    border: 1px solid var(--surface-border); border-radius: 24px; padding: 32px; box-shadow: var(--shadow-glow);
+}
+
+.pomo-settings-group { margin-bottom: 28px; }
+.pomo-settings-group:last-child { margin-bottom: 0; }
+.pomo-settings-group h3 { font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+/* Tempos Customizados */
+.time-inputs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.time-input-box { display: flex; flex-direction: column; gap: 8px; }
+.time-input-box label { font-size: 11px; color: var(--text-muted); font-weight: 500; text-align: center; }
+.time-input-box input {
+    background: var(--input-bg); border: 1px solid var(--input-border);
+    padding: 12px; border-radius: 12px; color: var(--text-main); font-size: 16px; font-weight: 600; text-align: center; outline: none; transition: all 0.2s;
+}
+.time-input-box input:focus { border-color: var(--text-muted); background: var(--surface-hover); }
+
+/* Ambient Sounds */
+.ambient-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.btn-ambient {
+    background: var(--subtle-bg); border: 1px solid var(--surface-border);
+    color: var(--text-muted); padding: 12px; border-radius: 12px;
+    font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-ambient:hover { color: var(--text-main); background: var(--surface-hover); }
+.btn-ambient.active { color: #fff; background: rgba(167, 139, 250, 0.6); border-color: #a78bfa; }
+.ambient-volume { width: 100%; accent-color: #a78bfa; cursor: pointer; }
+
+/* Spotify e Selects */
+.pomo-select .dropdown-trigger {
+    padding: 14px 16px; border-radius: 12px; font-size: 13px; font-weight: 500;
+}
+
+.pomo-input-text {
+    width: 100%; background: var(--input-bg); border: 1px solid var(--input-border);
+    color: var(--text-main); padding: 14px 16px; border-radius: 12px; font-size: 13px; outline: none; transition: all 0.2s;
+}
+.pomo-input-text:focus { border-color: var(--text-muted); background: var(--surface-hover); }
+
+.spotify-container { width: 100%; height: 152px; border-radius: 12px; overflow: hidden; margin-top: 16px; border: 1px solid var(--surface-border); }
+
+.stepper {
+    display: flex; align-items: center; gap: 2px;
+    background: var(--input-bg); border: 1px solid var(--input-border);
+    border-radius: 8px; padding: 2px; transition: border-color 0.2s;
+}
+
+.stepper:focus-within { border-color: var(--text-muted); }
+
+.stepper input[type="number"] {
+    flex: 1; min-width: 0; width: 100%; height: 26px; text-align: center;
+    background: transparent; border: none; outline: none; padding: 0;
+    color: var(--text-main); font-size: 14px; font-weight: 500;
+    appearance: textfield; -moz-appearance: textfield;
+}
+
+.stepper input[type="number"]::-webkit-outer-spin-button,
+.stepper input[type="number"]::-webkit-inner-spin-button {
+    appearance: none; -webkit-appearance: none; margin: 0;
+}
+
+.stepper-btn {
+    width: 26px; height: 26px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; border-radius: 6px; cursor: pointer;
+    color: var(--text-muted); transition: all 0.15s;
+}
+
+.stepper-btn:hover { background: var(--subtle-bg); color: var(--text-main); }
+.stepper-btn:active { transform: scale(0.92); }
+.stepper-btn svg { width: 13px; height: 13px; }
+
+.pomo-session {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin: 8px 0 20px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: var(--subtle-bg);
+    border: 1px solid var(--surface-border);
+}
+
+.pomo-session-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.pomo-session-item strong { font-size: 18px; font-weight: 600; color: var(--text-main); }
+.pomo-session-item span { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+
+.pomo-ring-wrap { position: relative; width: 260px; height: 260px; margin: 0 auto; }
+
+.pomo-ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.pomo-ring circle { fill: none; stroke-width: 6; }
+.pomo-ring-track { stroke: var(--surface-border); }
+.pomo-ring-fill { stroke: var(--btn-primary-bg); stroke-linecap: round; transition: stroke-dashoffset 0.3s linear; }
+
+.pomo-ring-handle {
+    position: absolute;
+    width: 20px; height: 20px;
+    margin: -10px 0 0 -10px;
+    border-radius: 50%;
+    border: 2px solid var(--surface-bg);
+    background: var(--btn-primary-bg);
+    cursor: grab;
+    padding: 0;
+}
+
+.pomo-ring-handle:focus-visible { outline: 2px solid var(--text-main); outline-offset: 2px; }
+.pomo-ring-handle:active { cursor: grabbing; }
+.pomo-ring-handle[aria-disabled="true"] { cursor: default; opacity: 0.4; }
+
+.pomo-ring-wrap .pomo-timer-display {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pomo-ring-fill { transition: none; }
+}
+
+.pomo-task-times { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+
+.pomo-task-time-row { display: grid; grid-template-columns: minmax(0, 1fr) 90px auto; align-items: center; gap: 10px; font-size: 12px; }
+.pomo-task-time-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-main); }
+.pomo-task-time-bar { height: 6px; border-radius: 100px; background: var(--subtle-bg); overflow: hidden; }
+.pomo-task-time-fill { display: block; height: 100%; background: var(--btn-primary-bg); }
+.pomo-task-time-value { color: var(--text-muted); white-space: nowrap; }

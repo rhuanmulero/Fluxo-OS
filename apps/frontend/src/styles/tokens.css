@@ -1,0 +1,22 @@
+:root {
+
+    --text-main: #FFFFFF;
+    --text-muted: #888888;
+    --surface-bg: rgba(20, 20, 20, 0.4);
+    --surface-border: rgba(255, 255, 255, 0.1);
+    --surface-hover: rgba(40, 40, 40, 0.5);
+    --shadow-glow: 0 4px 32px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.8);
+    --vignette: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.6) 120%);
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --eye-color: var(--text-main);
+
+    --sidebar-bg: rgba(10, 10, 10, 0.4);
+    --modal-bg: rgba(20, 20, 20, 0.95);
+    --input-bg: rgba(0, 0, 0, 0.3);
+    --input-border: rgba(255, 255, 255, 0.1);
+    --column-bg: rgba(18, 18, 18, 0.65);
+    --subtle-bg: rgba(255, 255, 255, 0.05);
+    --header-gradient: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent);
+    --btn-primary-bg: #FFFFFF;
+    --btn-primary-text: #000000;
+}

@@ -1,0 +1,186 @@
+.routine-container { height: 100%; overflow: hidden; position: relative; }
+.routine-main { height: 100%; display: flex; flex-direction: column; overflow-y: auto; }
+
+.routine-header {
+    padding: 32px 48px; display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 1px solid var(--surface-border); background: var(--header-gradient);
+}
+
+.routine-header h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 6px; }
+.routine-header p { font-size: 13px; color: var(--text-muted); }
+
+.routine-tabs { display: flex; gap: 4px; }
+
+.routine-tab {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 8px; border: 1px solid transparent; cursor: pointer;
+    background: transparent; color: var(--text-muted); font-size: 13px; transition: all 0.2s;
+}
+
+.routine-tab svg { width: 15px; height: 15px; }
+.routine-tab:hover { color: var(--text-main); background: var(--surface-hover); }
+.routine-tab.active {
+    color: var(--text-main); background: var(--surface-bg); border-color: var(--surface-border);
+}
+
+.routine-body { flex: 1; padding: 24px 48px; }
+.routine-toolbar { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 20px; }
+.habit-field { flex: 1; max-width: 320px; display: flex; flex-direction: column; }
+.habit-field .habit-input { max-width: none; }
+
+.habit-views { display: flex; gap: 4px; margin-right: auto; }
+
+.habit-view {
+    padding: 6px 14px;
+    border-radius: 100px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-family);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.habit-view:hover { color: var(--text-main); background: var(--surface-hover); }
+.habit-view.active { color: var(--text-main); background: var(--surface-bg); border-color: var(--surface-border); }
+
+.agenda-list { display: flex; flex-direction: column; gap: 28px; }
+.agenda-day h3 {
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-muted); margin-bottom: 10px;
+}
+
+.agenda-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 16px; border-radius: 10px; margin-bottom: 6px;
+    background: var(--column-bg); border: 1px solid var(--surface-border);
+}
+
+.agenda-time {
+    font-size: 12px; font-weight: 600; color: var(--text-muted);
+    width: 74px; flex-shrink: 0; font-variant-numeric: tabular-nums;
+}
+
+.agenda-mark { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.agenda-info { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.agenda-info strong { font-size: 14px; font-weight: 500; }
+.agenda-info span {
+    font-size: 12px; color: var(--text-muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.agenda-visibility {
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text-muted); padding: 3px 8px; border-radius: 6px; background: var(--subtle-bg);
+}
+
+.event-allday { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
+.event-allday input { width: auto; }
+
+.calendar-nav { display: flex; align-items: center; gap: 8px; }
+.calendar-nav strong { font-size: 14px; font-weight: 600; min-width: 160px; text-transform: capitalize; }
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    padding: 0 48px;
+}
+
+.calendar-weekday {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    text-align: center;
+    padding-bottom: 6px;
+}
+
+.calendar-day {
+    min-height: 92px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 6px;
+    border-radius: 10px;
+    background: var(--surface-bg);
+    border: 1px solid var(--surface-border);
+    cursor: pointer;
+    overflow: hidden;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.calendar-day:hover { background: var(--surface-hover); }
+.calendar-day.is-outside { opacity: 0.4; }
+.calendar-day.is-today .calendar-day-number { color: var(--btn-primary-bg); font-weight: 700; }
+.calendar-day.is-selected { border-color: var(--text-main); }
+
+.calendar-day-number { font-size: 12px; font-weight: 600; color: var(--text-main); }
+
+.calendar-chip {
+    font-size: 10px;
+    line-height: 1.4;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--subtle-bg);
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.calendar-more { font-size: 10px; color: var(--text-muted); padding-left: 6px; }
+
+.calendar-day-panel { padding: 24px 48px 32px; }
+.calendar-day-panel h3 { font-size: 13px; font-weight: 600; text-transform: capitalize; margin-bottom: 12px; }
+
+.habit-list { display: flex; flex-direction: column; gap: 10px; }
+
+.habit-row {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 16px; border-radius: 12px;
+    background: var(--column-bg); border: 1px solid var(--surface-border);
+}
+
+.habit-identity { display: flex; align-items: center; gap: 10px; width: 220px; flex-shrink: 0; }
+.habit-color { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.habit-identity strong { font-size: 14px; font-weight: 500; }
+
+.habit-week { display: flex; gap: 4px; }
+
+.habit-day {
+    width: 30px; height: 30px; border-radius: 8px; cursor: pointer;
+    background: var(--subtle-bg); border: 1px solid var(--surface-border);
+    color: var(--text-muted); font-size: 11px; font-weight: 600; transition: all 0.15s;
+}
+
+.habit-day:hover { border-color: var(--text-muted); }
+.habit-day.is-done { background: #10b981; border-color: #10b981; color: #fff; }
+
+.habit-history { display: flex; gap: 2px; flex: 1; min-width: 0; }
+.habit-tick { flex: 1; height: 22px; border-radius: 3px; background: var(--subtle-bg); }
+.habit-tick.is-done { background: #10b981; }
+
+.habit-input {
+    flex: 1; max-width: 320px; padding: 10px 14px; border-radius: 8px; font-size: 13px;
+    background: var(--input-bg); border: 1px solid var(--input-border);
+    color: var(--text-main); outline: none;
+}
+
+.participant-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 180px;
+    overflow-y: auto;
+    padding: 8px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    background: var(--input-bg);
+}
+
+.participant-option { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.event-participants { font-size: 12px; color: var(--text-muted); }
