@@ -8,6 +8,24 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+  profile       UserProfile?
+  memberships   WorkspaceMember[]
+  createdInvites WorkspaceInvite[]
+  authoredProjects   Project[]       @relation("ProjectAuthor")
+  projectMemberships ProjectMember[]
+  assignedTasks      Task[]          @relation("TaskAssignee")
+  authoredTasks      Task[]          @relation("TaskAuthor")
+  notes              Note[]            @relation("NoteAuthor")
+  snippets           Snippet[]         @relation("SnippetAuthor")
+  reviewedSnippets   Snippet[]         @relation("SnippetReviewer")
+  pomodoroSessions   PomodoroSession[]
+  authoredEvents     Event[]           @relation("EventAuthor")
+  habits             Habit[]
+  authoredRoadmaps   Roadmap[]         @relation("RoadmapAuthor")
+  notifications      Notification[]
+  eventParticipations EventParticipant[]
+  documents          Document[]        @relation("DocumentAuthor")
+  bookmarks          Bookmark[]        @relation("BookmarkAuthor")
 }
 
 model Session {

@@ -1,0 +1,23 @@
+enum UserStatus {
+  ONLINE
+  DEEP_WORK
+  AWAY
+  OFFLINE
+}
+
+model UserProfile {
+  id         String     @id @default(uuid())
+  userId     String     @unique @map("user_id")
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobTitle   String?    @map("job_title")
+  bio        String?
+  stack      String[]
+  bannerUrl  String?    @map("banner_url")
+  themeColor String?    @map("theme_color")
+  vibe       String?
+  status     UserStatus @default(ONLINE)
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+
+  @@map("user_profile")
+}

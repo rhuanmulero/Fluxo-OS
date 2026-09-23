@@ -1,0 +1,21 @@
+enum NotificationType {
+  TASK_DUE_SOON
+}
+
+model Notification {
+  id           String           @id @default(uuid())
+  userId       String           @map("user_id")
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         NotificationType
+  title        String
+  body         String
+  taskId       String?          @map("task_id")
+  task         Task?            @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  referenceKey String           @map("reference_key")
+  readAt       DateTime?        @map("read_at")
+  createdAt    DateTime         @default(now()) @map("created_at")
+
+  @@unique([userId, referenceKey])
+  @@index([userId, readAt])
+  @@map("notification")
+}

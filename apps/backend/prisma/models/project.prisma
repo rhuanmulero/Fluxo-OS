@@ -1,0 +1,146 @@
+enum ProjectModuleName {
+  TASKS
+  KANBAN
+  NOTES
+  SNIPPETS
+  POMODORO
+  AGENDA
+  HABITS
+  ROADMAP
+  VAULT
+  BOOKMARKS
+}
+
+enum GovernanceModeName {
+  MICROMANAGEMENT
+  HIERARCHICAL
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TaskType {
+  FEATURE
+  BUG
+  DESIGN
+  REFACTOR
+  OTHER
+}
+
+enum RecurrenceRule {
+  NONE
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+model Project {
+  id             String                 @id @default(uuid())
+  workspaceId    String                 @map("workspace_id")
+  workspace      Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name           String
+  description    String?
+  color          String?
+  createdById    String                 @map("created_by_id")
+  createdBy      User                   @relation("ProjectAuthor", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt      DateTime               @default(now()) @map("created_at")
+  updatedAt      DateTime               @updatedAt @map("updated_at")
+  members        ProjectMember[]
+  moduleSettings ProjectModuleSetting[]
+  columns        KanbanColumn[]
+  tasks          Task[]
+  notes            Note[]
+  snippets         Snippet[]
+  documents        Document[]
+  bookmarks        Bookmark[]
+  pomodoroSessions PomodoroSession[]
+  events           Event[]
+  habits           Habit[]
+  roadmaps         Roadmap[]
+
+  @@index([workspaceId])
+  @@map("project")
+}
+
+model ProjectMember {
+  id        String   @id @default(uuid())
+  projectId String   @map("project_id")
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addedAt   DateTime @default(now()) @map("added_at")
+
+  @@unique([projectId, userId])
+  @@index([userId])
+  @@map("project_member")
+}
+
+model ProjectModuleSetting {
+  id         String             @id @default(uuid())
+  projectId  String             @map("project_id")
+  project    Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  module     ProjectModuleName
+  governance GovernanceModeName
+  updatedAt  DateTime           @updatedAt @map("updated_at")
+
+  @@unique([projectId, module])
+  @@map("project_module_setting")
+}
+
+model KanbanColumn {
+  id        String     @id @default(uuid())
+  projectId String     @map("project_id")
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name      String
+  position  Int
+  color     String?
+  status    TaskStatus
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  tasks     Task[]
+
+  @@index([projectId, position])
+  @@map("kanban_column")
+}
+
+model Task {
+  id               String         @id @default(uuid())
+  projectId        String         @map("project_id")
+  project          Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  kanbanColumnId   String         @map("kanban_column_id")
+  kanbanColumn     KanbanColumn   @relation(fields: [kanbanColumnId], references: [id], onDelete: Restrict)
+  title            String
+  shortDescription String?        @map("short_description")
+  description      String?
+  priority         TaskPriority
+  type             TaskType
+  tags             String[]
+  folder           String?
+  assigneeId       String?        @map("assignee_id")
+  assignee         User?          @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  dueDate          DateTime?      @map("due_date")
+  estimatedHours   Decimal?       @map("estimated_hours") @db.Decimal(5, 2)
+  recurrence       RecurrenceRule @default(NONE)
+  isPinned         Boolean        @default(false) @map("is_pinned")
+  position         Int
+  createdById      String         @map("created_by_id")
+  createdBy        User           @relation("TaskAuthor", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+  pomodoroSessions PomodoroSession[]
+  notifications    Notification[]
+
+  @@index([projectId])
+  @@index([kanbanColumnId, position])
+  @@index([assigneeId])
+  @@map("task")
+}

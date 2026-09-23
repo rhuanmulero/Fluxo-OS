@@ -1,0 +1,40 @@
+enum WorkspaceRoleName {
+  OWNER
+  SUPERADMIN
+  ADMIN
+  MEMBER
+}
+
+model Workspace {
+  id        String            @id @default(uuid())
+  name      String
+  slug      String            @unique
+  createdAt DateTime          @default(now()) @map("created_at")
+  updatedAt DateTime          @updatedAt @map("updated_at")
+  members   WorkspaceMember[]
+  invites   WorkspaceInvite[]
+  projects  Project[]
+  notes     Note[]
+  snippets  Snippet[]
+  documents Document[]
+  bookmarks Bookmark[]
+  events    Event[]
+  habits    Habit[]
+
+  @@map("workspace")
+}
+
+model WorkspaceMember {
+  id            String            @id @default(uuid())
+  workspaceId   String            @map("workspace_id")
+  workspace     Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId        String            @map("user_id")
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role          WorkspaceRoleName
+  joinedAt      DateTime          @default(now()) @map("joined_at")
+  deactivatedAt DateTime?         @map("deactivated_at")
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+  @@map("workspace_member")
+}

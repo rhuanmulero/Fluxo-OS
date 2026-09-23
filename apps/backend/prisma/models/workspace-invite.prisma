@@ -1,0 +1,15 @@
+model WorkspaceInvite {
+  id          String            @id @default(uuid())
+  workspaceId String            @map("workspace_id")
+  workspace   Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  code        String            @unique
+  role        WorkspaceRoleName
+  email       String?
+  expiresAt   DateTime          @map("expires_at")
+  usedAt      DateTime?         @map("used_at")
+  createdById String            @map("created_by_id")
+  createdBy   User              @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime          @default(now()) @map("created_at")
+
+  @@map("workspace_invite")
+}
