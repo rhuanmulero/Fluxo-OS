@@ -1,3 +1,5 @@
+import { NamiChat } from './shell/nami-chat.js';
+import { NamiSection } from './shell/settings/nami-section.js';
 import { createIcons, icons } from 'lucide';
 import '@fontsource/inter/300.css';
 import '@fontsource/inter/400.css';
@@ -105,6 +107,7 @@ export default function App() {
 
     settingsPanel
         .add(new AccountSection(), 'account')
+        .add(new NamiSection(), 'account')
         .add(new AppearanceSection(settingsPanel), 'account')
         .add(new ClockSection(settingsPanel), 'account')
         .add(new NavigationSection(settingsPanel, navigation), 'account')
@@ -170,5 +173,6 @@ export default function App() {
     navigateTo('playground');
 
     container.appendChild(mainWrapper);
+    new NamiChat().mount(container);
     return container;
 }

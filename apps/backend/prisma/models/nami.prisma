@@ -1,0 +1,31 @@
+model NamiSettings {
+  userId String @id @map("user_id")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  encryptedKey String @map("encrypted_key")
+  model String @default("gemini-3.5-flash-lite")
+  @@map("nami_settings")
+}
+
+model NamiConversation {
+  id String @id @default(uuid())
+  userId String @map("user_id")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  messages NamiMessage[]
+  @@index([userId, updatedAt])
+  @@map("nami_conversation")
+}
+
+model NamiMessage {
+  id String @id @default(uuid())
+  conversationId String @map("conversation_id")
+  conversation NamiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role String
+  content String
+  position Int
+  createdAt DateTime @default(now()) @map("created_at")
+  @@unique([conversationId, position])
+  @@map("nami_message")
+}

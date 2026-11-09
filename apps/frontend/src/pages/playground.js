@@ -44,14 +44,14 @@ export default function Playground() {
     // REMOVIDOS DAQUI: <div id="dynamic-bg"> e <div class="bg-vignette-overlay">
 
     playgroundContainer.innerHTML = `
-        <div id="mascot" class="mascot-container" title="Nami está dormindo...">
+        <button type="button" id="mascot" class="mascot-container" title="Conversar com a Nami" aria-label="Conversar com a Nami" aria-expanded="false" aria-controls="nami-chat-panel">
             <svg class="cat-pixel-art" viewBox="0 0 16 16" width="32" height="32" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
                 <path fill="currentColor" d="M2 3h2v1h1v1h6V4h1V3h2v4h1v6h-1v2H2v-2H1V7h1V3z"/>
                 <rect class="cat-eye" x="4" y="8" width="2" height="1"/>
                 <rect class="cat-eye" x="10" y="8" width="2" height="1"/>
                 <rect fill="#FF8A8A" x="7" y="10" width="2" height="1"/>
             </svg>
-        </div>
+        </button>
 
         <input type="file" id="bg-upload-input" accept="image/*" style="display: none;">
 

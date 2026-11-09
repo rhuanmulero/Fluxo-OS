@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { NamiModule } from './modules/nami/nami.module';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
@@ -25,6 +26,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
+    NamiModule,
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnvironment }),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot({

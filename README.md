@@ -55,6 +55,7 @@ flowchart LR
 | **Notas** | Editor de texto com blocos, busca e exportação em PDF, DOCX e Markdown. |
 | **Base de conhecimento** | Snippets de código, bookmarks e documentos (Vault) com upload de arquivos. |
 | **Roadmap** | Etapas do projeto com meta, pontos, prazo e status. |
+| **Nami** | Chat com Gemini, chave individual protegida e histórico privado de conversas. |
 | **Notificações** | Aviso de tarefas com prazo próximo. |
 
 ## Perfis e permissões
@@ -216,3 +217,21 @@ Os testes e2e da API e os do Playwright usam o banco configurado em `apps/backen
 <p align="center">
   Fatec Baixada Santista Rubens Lara · Santos, SP · 2026
 </p>
+
+## Assistente Nami (Gemini)
+
+A Nami atende aos requisitos RF47–RF50 e UC09: chat integrado, configuração individual da API, respostas no Fluxo e histórico persistente privado.
+
+1. Aplique as migrações e gere o cliente Prisma após atualizar o projeto.
+2. Configure `NAMI_ENCRYPTION_KEY` em `apps/backend/.env` com 64 caracteres hexadecimais. Para gerar: `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`.
+3. Reinicie o backend. Abra **Configurações → Nami**, ou o gatinho da Nami no canto inferior direito do Playground.
+4. Configure sua chave do [Google AI Studio](https://aistudio.google.com/apikey) e um modelo disponível na sua conta. O padrão é `gemini-3.5-flash-lite`, ajustável nas preferências.
+5. Envie uma mensagem. Em **Histórico**, abra uma conversa anterior para continuar; **Nova conversa** inicia outro contexto. É possível excluir a conversa ou remover a chave sem apagar o histórico.
+
+A chave é cifrada com AES-256-GCM antes de ser salva e nunca é devolvida pela API. Preserve a chave de criptografia do servidor: trocá-la exige que os usuários cadastrem novamente suas chaves do Gemini. Não a publique no Git.
+
+As mensagens são enviadas ao Google Gemini. A Nami não consulta automaticamente tarefas ou arquivos e não executa ações no Fluxo. São enviadas as últimas 40 mensagens como contexto; cada conversa permite até 100 interações. A lista exibe as 100 conversas mais recentes. As respostas são exibidas como texto, preservando código e quebras de linha, sem executar HTML. Cotas, custos e disponibilidade dependem da conta do Gemini.
+
+Testes específicos: `pnpm --filter backend test --runInBand --testPathPatterns=nami` e `pnpm --filter frontend test:e2e nami-chat.spec.js`. Os testes simulam o Gemini, sem consumir créditos ou exigir uma chave real.
+
+Referências: [API Gemini](https://ai.google.dev/api), [modelos](https://ai.google.dev/gemini-api/docs/models).

@@ -28,7 +28,7 @@ test.describe('Configuracoes por categoria', () => {
     const account = page.locator('.settings-rail-section[data-category="account"] .settings-rail-item');
     const workspace = page.locator('.settings-rail-section[data-category="workspace"] .settings-rail-item');
 
-    await expect(account).toHaveText(['Conta', 'Aparência', 'Relógio e clima', 'Navegação', 'Pomodoro']);
+    await expect(account).toHaveText(['Conta', 'Nami', 'Aparência', 'Relógio e clima', 'Navegação', 'Pomodoro']);
     await expect(workspace).toHaveText(['Workspace', 'Membros', 'Convites', 'Regras dos módulos']);
   });
 
