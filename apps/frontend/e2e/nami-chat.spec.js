@@ -29,12 +29,20 @@ test('Nami configura chave, conversa, restaura histórico e preserva rascunho ap
   await page.getByRole('button', { name: 'Conversar com a Nami', exact: true }).focus();
   await page.getByRole('button', { name: 'Conversar com a Nami', exact: true }).press('Enter');
   const panel = page.getByRole('dialog', { name: 'Chat da Nami' });
-  await expect(panel.getByText('Configure sua chave para começar.', { exact: true })).toBeVisible();
-  await panel.getByLabel('Chave da API do Gemini', { exact: true }).fill('chave-ficticia-de-teste-123456');
-  await panel.getByRole('button', { name: 'Salvar configuração' }).click();
-  await expect(panel.getByText('Configuração salva.', { exact: false })).toBeVisible();
-  await expect(panel.getByLabel('Chave da API do Gemini', { exact: true })).toHaveValue('');
-  await panel.getByRole('button', { name: 'Configurar', exact: true }).click();
+  await expect(panel.getByRole('heading', { name: 'Oi, eu sou a Nami!' })).toBeVisible();
+  await expect(panel.getByLabel('Chave da API do Gemini', { exact: true })).toHaveCount(0);
+  await expect(panel.getByLabel('Mensagem para a Nami', { exact: true })).toBeHidden();
+  await expect(panel.getByRole('button', { name: 'Histórico', exact: true })).toBeHidden();
+
+  await panel.getByRole('button', { name: 'Configurações', exact: true }).click();
+  await expect(page.locator('.settings-rail-item[data-section="nami"]')).toHaveClass(/active/);
+  const settings = page.locator('.settings-content');
+  const apiKey = settings.getByLabel('Chave da API do Gemini', { exact: true });
+  await apiKey.fill('chave-ficticia-de-teste-123456');
+  await settings.getByRole('button', { name: 'Salvar configuração' }).click();
+  await expect(settings.getByRole('status')).toContainText('Configuração salva.');
+  await expect(apiKey).toHaveValue('');
+  await page.locator('.settings-close').click();
   await panel.getByLabel('Mensagem para a Nami', { exact: true }).fill('Como testar?');
   await panel.getByRole('button', { name: 'Enviar', exact: true }).click();
   await expect(panel.locator('.nami-assistant')).toContainText('<script>não executar</script>');

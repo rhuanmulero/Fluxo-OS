@@ -173,6 +173,6 @@ export default function App() {
     navigateTo('playground');
 
     container.appendChild(mainWrapper);
-    new NamiChat().mount(container);
+    new NamiChat().mount(container, () => settingsPanel.open('nami'));
     return container;
 }

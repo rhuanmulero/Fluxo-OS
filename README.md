@@ -224,9 +224,9 @@ A Nami atende aos requisitos RF47–RF50 e UC09: chat integrado, configuração 
 
 1. Aplique as migrações e gere o cliente Prisma após atualizar o projeto.
 2. Configure `NAMI_ENCRYPTION_KEY` em `apps/backend/.env` com 64 caracteres hexadecimais. Para gerar: `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`.
-3. Reinicie o backend. Abra **Configurações → Nami**, ou o gatinho da Nami no canto inferior direito do Playground.
+3. Reinicie o backend. Abra **Configurações → Nami**.
 4. Configure sua chave do [Google AI Studio](https://aistudio.google.com/apikey) e um modelo disponível na sua conta. O padrão é `gemini-3.5-flash-lite`, ajustável nas preferências.
-5. Envie uma mensagem. Em **Histórico**, abra uma conversa anterior para continuar; **Nova conversa** inicia outro contexto. É possível excluir a conversa ou remover a chave sem apagar o histórico.
+5. Abra o chat pelo gatinho no canto inferior direito do Playground e envie uma mensagem. Se ainda não houver chave, o chat exibe um aviso. Em **Histórico**, abra uma conversa anterior para continuar; **Nova conversa** inicia outro contexto. É possível excluir a conversa ou remover a chave sem apagar o histórico.
 
 A chave é cifrada com AES-256-GCM antes de ser salva e nunca é devolvida pela API. Preserve a chave de criptografia do servidor: trocá-la exige que os usuários cadastrem novamente suas chaves do Gemini. Não a publique no Git.
 

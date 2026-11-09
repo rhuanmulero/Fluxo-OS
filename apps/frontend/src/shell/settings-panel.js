@@ -42,9 +42,11 @@ export class SettingsPanel {
     this.render();
   }
 
-  open() {
+  open(sectionId) {
+    if (sectionId) this.#active = sectionId;
     this.#element.classList.add('active');
     this.render();
+    if (sectionId) this.#element.querySelector('.settings-rail-item.active')?.focus();
   }
 
   close() {

@@ -56,6 +56,7 @@ export class NamiSection {
         configured = true;
         key.value = '';
         feedback.textContent = 'Configuração salva. A chave será verificada ao enviar uma mensagem.';
+        document.dispatchEvent(new CustomEvent('nami-settings-changed', { detail: { configured } }));
       });
     });
     content.querySelector('[data-remove-key]').addEventListener('click', () => void run(async () => {
@@ -63,6 +64,7 @@ export class NamiSection {
       configured = false;
       key.value = '';
       feedback.textContent = 'Chave removida. Seu histórico foi mantido.';
+      document.dispatchEvent(new CustomEvent('nami-settings-changed', { detail: { configured } }));
     }));
   }
 }

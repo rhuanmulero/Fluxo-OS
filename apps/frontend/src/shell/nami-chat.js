@@ -1,5 +1,4 @@
 import { namiApi } from '../api/nami-api.js';
-import { NamiSection } from './settings/nami-section.js';
 import { confirmDialog } from '../components/confirm-dialog.js';
 import '../styles/components/nami.css';
 
@@ -10,32 +9,41 @@ export class NamiChat {
   #history;
   #form;
   #feedback;
+  #content;
+  #status;
+  #welcome;
+  #settingsCheck = 0;
   #conversation = null;
   #busy = false;
   #opener;
 
-  mount(container) {
+  mount(container, onOpenSettings) {
     this.#element = document.createElement('div');
     this.#element.className = 'nami-widget';
     this.#element.innerHTML = `
       <section id="nami-chat-panel" class="nami-panel" role="dialog" aria-label="Chat da Nami" aria-modal="false" hidden>
         <header class="nami-header"><div><strong>Nami</strong><small>Sua assistente com Gemini</small></div><button type="button" class="btn-secondary" data-close aria-label="Fechar chat da Nami">Fechar</button></header>
-        <div class="nami-toolbar">
-          <button type="button" class="btn-secondary" data-new>Nova conversa</button>
-          <button type="button" class="btn-secondary" data-history aria-expanded="false">Histórico</button>
-          <button type="button" class="btn-secondary" data-settings aria-expanded="false">Configurar</button>
-          <button type="button" class="btn-secondary" data-delete disabled>Excluir conversa</button>
+        <p class="nami-status" role="status" hidden></p>
+        <div class="nami-welcome" hidden>
+          <h2>Oi, eu sou a Nami!</h2>
+          <p>Para começarmos a conversar, adicione sua chave do Gemini em <button type="button" class="nami-settings-link">Configurações</button>.</p>
         </div>
-        <div class="nami-history" aria-label="Conversas anteriores" hidden></div>
-        <div class="nami-settings" hidden></div>
-        <div class="nami-messages" role="log" aria-label="Mensagens" aria-live="polite"></div>
-        <p class="nami-feedback" role="status"></p>
-        <form class="nami-compose">
-          <label for="nami-message">Mensagem para a Nami</label>
-          <textarea id="nami-message" maxlength="8000" rows="3" required placeholder="Escreva sua dúvida…"></textarea>
-          <button type="submit" class="btn-primary">Enviar</button>
-          <small>As mensagens são enviadas ao Google Gemini. A Nami pode cometer erros.</small>
-        </form>
+        <div class="nami-content" hidden>
+          <div class="nami-toolbar">
+            <button type="button" class="btn-secondary" data-new>Nova conversa</button>
+            <button type="button" class="btn-secondary" data-history aria-expanded="false">Histórico</button>
+            <button type="button" class="btn-secondary" data-delete disabled>Excluir conversa</button>
+          </div>
+          <div class="nami-history" aria-label="Conversas anteriores" hidden></div>
+          <div class="nami-messages" role="log" aria-label="Mensagens" aria-live="polite"></div>
+          <p class="nami-feedback" role="status"></p>
+          <form class="nami-compose">
+            <label for="nami-message">Mensagem para a Nami</label>
+            <textarea id="nami-message" maxlength="8000" rows="3" required placeholder="Escreva sua dúvida…"></textarea>
+            <button type="submit" class="btn-primary">Enviar</button>
+            <small>As mensagens são enviadas ao Google Gemini. A Nami pode cometer erros.</small>
+          </form>
+        </div>
       </section>`;
     container.append(this.#element);
     const query = selector => this.#element.querySelector(selector);
@@ -44,6 +52,10 @@ export class NamiChat {
     this.#history = query('.nami-history');
     this.#form = query('form');
     this.#feedback = query('.nami-feedback');
+    this.#content = query('.nami-content');
+    this.#status = query('.nami-status');
+    this.#welcome = query('.nami-welcome');
+    query('.nami-settings-link').addEventListener('click', onOpenSettings);
     query('[data-close]').addEventListener('click', () => this.close());
     query('[data-new]').addEventListener('click', () => {
       if (this.#busy) return;
@@ -52,12 +64,6 @@ export class NamiChat {
       this.#feedback.textContent = '';
       this.#form.reset();
       this.#form.querySelector('textarea').focus();
-    });
-    query('[data-settings]').addEventListener('click', () => {
-      const settings = query('.nami-settings');
-      settings.hidden = !settings.hidden;
-      query('[data-settings]').setAttribute('aria-expanded', String(!settings.hidden));
-      if (!settings.hidden) new NamiSection().render(settings);
     });
     query('[data-history]').addEventListener('click', () => {
       this.#history.hidden = !this.#history.hidden;
@@ -68,7 +74,6 @@ export class NamiChat {
     this.#form.addEventListener('submit', event => { event.preventDefault(); void this.#send(); });
     this.#panel.addEventListener('keydown', event => {
       if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); this.close(); }
-
     });
     container.addEventListener('click', event => {
       const mascot = event.target.closest('.mascot-container');
@@ -78,29 +83,46 @@ export class NamiChat {
         else this.close();
       }
     });
+    document.addEventListener('nami-settings-changed', event => {
+      if (this.#panel.hidden) return;
+      this.#settingsCheck++;
+      this.#showAvailability(event.detail.configured);
+    });
     this.#renderMessages([]);
   }
 
+  #showAvailability(configured, message = '') {
+    this.#content.hidden = !configured;
+    this.#welcome.hidden = configured || Boolean(message);
+    this.#status.hidden = configured || !message;
+    this.#status.textContent = message;
+  }
+
   async open() {
-    this.#opener = document.activeElement;
+    const check = ++this.#settingsCheck;
     this.#panel.hidden = false;
-    document.querySelector('.mascot-container')?.setAttribute('aria-expanded', 'true');
-    this.#form.querySelector('textarea').focus();
+    this.#opener?.setAttribute('aria-expanded', 'true');
+    this.#showAvailability(false, 'Verificando a configuração da Nami…');
+    const close = this.#panel.querySelector('[data-close]');
+    close.focus();
     try {
-      const settings = await namiApi.settings();
-      if (!settings.configured) {
-        const region = this.#element.querySelector('.nami-settings');
-        region.hidden = false;
-        this.#element.querySelector('[data-settings]').setAttribute('aria-expanded', 'true');
-        new NamiSection().render(region);
-        this.#feedback.textContent = 'Antes de conversar, configure sua chave do Gemini acima.';
+      const { configured } = await namiApi.settings();
+      if (check !== this.#settingsCheck) return;
+      this.#showAvailability(configured);
+      if (configured && !this.#busy && document.activeElement === close) {
+        this.#form.querySelector('textarea').focus();
       }
-    } catch (error) { this.#feedback.textContent = error.message; }
+    } catch {
+      if (check === this.#settingsCheck) {
+        this.#showAvailability(false, 'Não foi possível verificar a configuração da Nami. Feche o chat e tente novamente.');
+      }
+    }
   }
 
   close() {
+    this.#settingsCheck++;
     this.#panel.hidden = true;
-    document.querySelector('.mascot-container')?.setAttribute('aria-expanded', 'false');
+    this.#opener?.setAttribute('aria-expanded', 'false');
     this.#opener?.focus();
   }
 
@@ -136,7 +158,7 @@ export class NamiChat {
   async #send() {
     const input = this.#form.querySelector('textarea');
     const message = input.value.trim();
-    if (this.#busy || !message) return;
+    if (this.#busy || this.#content.hidden || !message) return;
     this.#pending(true);
     this.#feedback.textContent = 'Nami está pensando…';
     try {
