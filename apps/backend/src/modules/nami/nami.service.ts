@@ -1,15 +1,16 @@
+import { NamiProjectContextService } from './nami-project-context.service';
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/database/prisma.service';
 import { NamiKeyService } from './nami-key.service';
 import { GeminiService } from './gemini.service';
-import { NamiMessageDto, NamiSettingsDto } from './dto/nami.dto';
+import { NamiMessageDto, NamiSettingsDto, UpdateNamiConversationDto } from './dto/nami.dto';
 
 export const DEFAULT_NAMI_MODEL = 'gemini-3.5-flash-lite';
 
 @Injectable()
 export class NamiService {
   private readonly busy = new Set<string>();
-  constructor(private readonly prisma: PrismaService, private readonly keys: NamiKeyService, private readonly gemini: GeminiService) {}
+  constructor(private readonly prisma: PrismaService, private readonly keys: NamiKeyService, private readonly gemini: GeminiService, private readonly projects: NamiProjectContextService) {}
 
   async settings(userId: string) {
     const saved = await this.prisma.namiSettings.findUnique({ where: { userId } });
@@ -29,13 +30,21 @@ export class NamiService {
   }
 
   list(userId: string) {
-    return this.prisma.namiConversation.findMany({ where: { userId }, orderBy: { updatedAt: 'desc' }, take: 100, select: { id: true, title: true, updatedAt: true } });
+    return this.prisma.namiConversation.findMany({ where: { userId }, orderBy: [{ pinned: 'desc' }, { updatedAt: 'desc' }], take: 100, select: { id: true, title: true, pinned: true, updatedAt: true } });
   }
 
   async conversation(userId: string, id: string) {
     const conversation = await this.prisma.namiConversation.findFirst({ where: { id, userId }, include: { messages: { orderBy: { position: 'asc' } } } });
     if (!conversation) throw new NotFoundException('Conversa não encontrada.');
     return conversation;
+  }
+
+  async updateConversation(userId: string, id: string, dto: UpdateNamiConversationDto) {
+    if (dto.title === undefined && dto.pinned === undefined) {
+      throw new BadRequestException('Informe uma alteração para a conversa.');
+    }
+    const result = await this.prisma.namiConversation.updateMany({ where: { id, userId }, data: dto });
+    if (!result.count) throw new NotFoundException('Conversa não encontrada.');
   }
 
   async removeConversation(userId: string, id: string) {
@@ -52,10 +61,13 @@ export class NamiService {
       const conversation = dto.conversationId ? await this.conversation(userId, dto.conversationId) : null;
       const history = conversation?.messages ?? [];
       if (history.length >= 200) throw new BadRequestException('Esta conversa atingiu o limite. Inicie uma nova conversa.');
-      const answer = await this.gemini.reply(this.keys.decrypt(settings.encryptedKey), settings.model, [
+      const context = dto.projectId ? await this.projects.read(userId, dto.projectId) : undefined;
+      const messages = [
         ...history.slice(-40).map(({ role, content }) => ({ role, content })),
         { role: 'user', content: dto.message },
-      ]);
+      ];
+      const args = [this.keys.decrypt(settings.encryptedKey), settings.model, messages] as const;
+      const answer = context ? await this.gemini.reply(...args, JSON.stringify(context)) : await this.gemini.reply(...args);
       // Persistimos o par apenas após sucesso: falhas não deixam mensagens incompletas.
       return await this.prisma.$transaction(async tx => {
         const target = conversation

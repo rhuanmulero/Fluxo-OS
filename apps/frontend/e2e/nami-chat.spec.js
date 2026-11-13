@@ -1,13 +1,15 @@
 import { expect, test } from '@playwright/test';
 import { newAccount, signUp } from './support/account.js';
-import { createWorkspace, enterWorkspace } from './support/shell.js';
+import { createWorkspace, createProject, enterWorkspace } from './support/shell.js';
 
 test('Nami configura chave, conversa, restaura histórico e preserva rascunho após falha', async ({ page }) => {
   await signUp(page, newAccount('nami-ui'));
-  await createWorkspace(page, 'Workspace Nami');
+  const workspace = await createWorkspace(page, 'Workspace Nami');
+  await createProject(page, workspace.id, 'Projeto Nami');
   let configured = false;
   let fail = false;
-  const conversation = { id: 'conv-ui', title: 'Como testar?', messages: [{ role: 'user', content: 'Como testar?' }, { role: 'model', content: '<script>não executar</script> Use testes automatizados.' }] };
+  let deleted = false;
+  const conversation = { id: 'conv-ui', title: 'Como testar?', messages: [{ role: 'user', content: 'Como testar?' }, { role: 'model', content: '<script>não executar</script> Use **testes automatizados** no \\*\\*Fluxo\\*\\*.' }] };
   await page.route('**/api/me/nami/**', async route => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
@@ -21,7 +23,16 @@ test('Nami configura chave, conversa, restaura histórico e preserva rascunho ap
     } else if (path.endsWith('/messages')) {
       if (fail) { await route.fulfill({ status: 429, json: { message: 'Limite de uso do Gemini atingido.' } }); return; }
       body = conversation;
-    } else if (path.endsWith('/conversations')) body = [conversation];
+    } else if (path.endsWith('/conversations')) body = deleted ? [] : [conversation];
+    else if (request.method() === 'PATCH') {
+      Object.assign(conversation, request.postDataJSON());
+      await route.fulfill({ status: 204 });
+      return;
+    } else if (request.method() === 'DELETE') {
+      deleted = true;
+      await route.fulfill({ status: 204 });
+      return;
+    }
     else body = conversation;
     await route.fulfill({ json: body });
   });
@@ -43,10 +54,22 @@ test('Nami configura chave, conversa, restaura histórico e preserva rascunho ap
   await expect(settings.getByRole('status')).toContainText('Configuração salva.');
   await expect(apiKey).toHaveValue('');
   await page.locator('.settings-close').click();
+  await page.getByRole('button', { name: 'Conversar com a Nami', exact: true }).press('Enter');
   await panel.getByLabel('Mensagem para a Nami', { exact: true }).fill('Como testar?');
-  await panel.getByRole('button', { name: 'Enviar', exact: true }).click();
+  const composer = panel.getByLabel('Mensagem para a Nami', { exact: true });
+  await composer.press('Shift+Enter');
+  await expect(composer).toHaveValue('Como testar?\n');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await composer.press('Enter');
+  const reply = panel.locator('.nami-assistant .nami-markdown');
+  await expect.poll(async () => {
+    const text = await reply.textContent();
+    return text.includes('<script>') && !text.includes('Fluxo');
+  }).toBe(true);
+  await expect(reply).toContainText('Fluxo');
   await expect(panel.locator('.nami-assistant')).toContainText('<script>não executar</script>');
   await expect(panel.locator('.nami-messages script')).toHaveCount(0);
+  await expect(panel.locator('.nami-assistant div strong')).toHaveText(['testes automatizados', 'Fluxo']);
   await panel.getByRole('button', { name: 'Nova conversa', exact: true }).click();
   await panel.getByRole('button', { name: 'Histórico', exact: true }).click();
   await panel.locator('.nami-history').getByRole('button', { name: 'Como testar?' }).click();
@@ -71,4 +94,46 @@ test('Nami configura chave, conversa, restaura histórico e preserva rascunho ap
   await page.screenshot({ path: '../../tmp/nami-desktop.png' });
   await panel.getByLabel('Mensagem para a Nami', { exact: true }).press('Escape');
   await expect(panel).toBeHidden();
+  const mascot = page.getByRole('button', { name: 'Conversar com a Nami', exact: true });
+  await mascot.press('Enter');
+  await expect(panel).toBeVisible();
+  await page.locator('[data-route="tasks"]').click();
+  await expect(panel).toBeHidden();
+  await expect(mascot).toBeVisible();
+  await mascot.press('Enter');
+  await expect(panel).toBeVisible();
+
+  await page.locator('#btn-new-task').click();
+  await expect(panel).toBeHidden();
+  await expect(mascot).toBeHidden();
+  await page.locator('#btn-close-drawer').click();
+  await expect(mascot).toBeVisible();
+
+  await mascot.press('Enter');
+  await panel.getByRole('button', { name: 'Histórico', exact: true }).click();
+  await panel.locator('.nami-history-row').hover();
+  await panel.getByRole('button', { name: 'Fixar conversa', exact: true }).click();
+  await expect(panel.getByRole('button', { name: 'Desafixar conversa' })).toHaveAttribute('aria-pressed', 'true');
+  await panel.locator('.nami-history-row').hover();
+  await panel.getByRole('button', { name: 'Renomear conversa' }).click();
+  await panel.getByRole('textbox', { name: 'Nome da conversa' }).fill('Testes do Fluxo');
+  await panel.getByRole('button', { name: 'Salvar', exact: true }).click();
+  await expect(panel.getByRole('button', { name: 'Testes do Fluxo' })).toBeVisible();
+  await panel.locator('.nami-history-row').hover();
+  const expand = panel.getByRole('button', { name: 'Tela cheia' });
+  await expand.click();
+  const sidebar = panel.getByRole('complementary', { name: 'Histórico da Nami' });
+  await sidebar.getByRole('button', { name: 'Testes do Fluxo' }).click();
+  await expect(composer).toBeVisible();
+  await expect(sidebar.getByRole('button', { name: 'Testes do Fluxo' })).toHaveAttribute('aria-current', 'true');
+  await sidebar.getByRole('button', { name: /Nova conversa/ }).click();
+  await expect(panel.getByRole('heading', { name: 'No que vamos trabalhar?' })).toBeVisible();
+  await expand.click();
+  await expect(sidebar).toBeHidden();
+  await panel.getByRole('button', { name: 'Histórico', exact: true }).click();
+  await panel.locator('.nami-history-row').hover();
+  await panel.getByRole('button', { name: 'Excluir conversa' }).click();
+  await panel.getByRole('button', { name: 'Excluir', exact: true }).click();
+  await expect(panel.getByText('Você ainda não tem conversas salvas.')).toBeVisible();
+
 });

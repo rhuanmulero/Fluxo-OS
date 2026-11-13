@@ -1,3 +1,5 @@
+import { workspaceContext } from '../../core/workspace-context.js';
+import { includesProjectContext, setProjectContextPreference } from '../../core/nami-project-preference.js';
 import { namiApi } from '../../api/nami-api.js';
 
 export class NamiSection {
@@ -8,8 +10,15 @@ export class NamiSection {
   render(content) {
     content.innerHTML = `
       <h3>Nami · Gemini</h3>
-      <p class="settings-hint">Sua assistente para dúvidas técnicas e produtividade.</p>
       <p class="settings-hint">As mensagens desta conversa são enviadas ao Google Gemini para gerar respostas. O histórico é privado e fica salvo na sua conta do Fluxo.</p>
+      <div class="nami-context-settings">
+        <h3>Contexto do projeto</h3>
+        <label class="nami-context-checkbox">
+          <input type="checkbox" class="custom-checkbox" data-project-context aria-describedby="nami-context-hint">
+          <span>Enviar contexto do projeto ao Gemini</span>
+        </label>
+        <p class="settings-hint" id="nami-context-hint" data-context-hint></p>
+      </div>
       <form class="nami-settings-form">
         <label>Chave da API do Gemini
           <input name="apiKey" type="password" class="settings-input" autocomplete="off" maxlength="256" placeholder="Cole sua chave para configurar ou substituir">
@@ -25,17 +34,32 @@ export class NamiSection {
         </div>
         <p role="status" class="settings-hint" data-nami-status>Carregando configuração…</p>
       </form>`;
+    const project = workspaceContext.project;
+    const toggle = content.querySelector('[data-project-context]');
+    toggle.disabled = !project;
+    toggle.checked = includesProjectContext(project?.id);
+    toggle.addEventListener('change', () => {
+      setProjectContextPreference(project?.id, toggle.checked);
+    });
+    content.querySelector('[data-context-hint]').textContent = project
+      ? 'Quando ativado, as mensagens incluem dados de ' + project.name + ' que você tem permissão para consultar. A preferência é salva neste navegador.'
+      : 'Selecione um projeto para ativar o envio de contexto.';
+
     const form = content.querySelector('form');
     const feedback = content.querySelector('[data-nami-status]');
     const key = form.elements.apiKey;
     const model = form.elements.model;
     const buttons = [...form.querySelectorAll('button')];
     let configured = false;
+    const syncKeyMask = () => {
+      key.placeholder = configured ? '••••••••••••••••' : 'Cole sua chave para configurar ou substituir';
+    };
     let ready = false;
     const pending = value => buttons.forEach(button => button.disabled = value);
     pending(true);
     void namiApi.settings().then(settings => {
       configured = settings.configured;
+      syncKeyMask();
       model.value = settings.model;
       feedback.textContent = configured ? 'Chave configurada. O valor salvo não é exibido.' : 'Configure sua chave para começar.';
       ready = true;
@@ -55,6 +79,7 @@ export class NamiSection {
         await namiApi.saveSettings({ model: model.value.trim(), ...(key.value.trim() ? { apiKey: key.value.trim() } : {}) });
         configured = true;
         key.value = '';
+        syncKeyMask();
         feedback.textContent = 'Configuração salva. A chave será verificada ao enviar uma mensagem.';
         document.dispatchEvent(new CustomEvent('nami-settings-changed', { detail: { configured } }));
       });
@@ -63,6 +88,7 @@ export class NamiSection {
       await namiApi.removeKey();
       configured = false;
       key.value = '';
+      syncKeyMask();
       feedback.textContent = 'Chave removida. Seu histórico foi mantido.';
       document.dispatchEvent(new CustomEvent('nami-settings-changed', { detail: { configured } }));
     }));

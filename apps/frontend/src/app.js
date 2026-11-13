@@ -73,7 +73,14 @@ export default function App() {
 
     const pagesCache = {};
 
+    const namiChat = new NamiChat();
+    let activePage;
+
     function navigateTo(pageName) {
+        if (activePage !== undefined && activePage !== pageName) {
+            namiChat.close({ restoreFocus: false });
+        }
+        activePage = pageName;
         Array.from(mainWrapper.children).forEach(child => child.style.display = 'none');
 
         if (!pagesCache[pageName]) {
@@ -173,6 +180,6 @@ export default function App() {
     navigateTo('playground');
 
     container.appendChild(mainWrapper);
-    new NamiChat().mount(container, () => settingsPanel.open('nami'));
+    namiChat.mount(container, () => settingsPanel.open('nami'));
     return container;
 }

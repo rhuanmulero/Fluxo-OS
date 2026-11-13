@@ -22,11 +22,17 @@ export class NavigationTooltip {
   }
 
   #render(target, edge) {
+    if (!target.isConnected || !target.getClientRects().length || !target.dataset.label) return;
     const shortcut = target.dataset.shortcut;
 
-    this.#element.innerHTML = shortcut
-      ? `<span>${target.dataset.label}</span><kbd>${shortcut}</kbd>`
-      : `<span>${target.dataset.label}</span>`;
+    const label = document.createElement('span');
+    label.textContent = target.dataset.label;
+    this.#element.replaceChildren(label);
+    if (shortcut) {
+      const key = document.createElement('kbd');
+      key.textContent = shortcut;
+      this.#element.append(key);
+    }
 
     this.#element.classList.add('visible');
     this.#place(target.getBoundingClientRect(), edge);
@@ -49,7 +55,7 @@ export class NavigationTooltip {
   }
 
   #move(left, top) {
-    this.#element.style.left = `${Math.max(GAP, left)}px`;
-    this.#element.style.top = `${Math.max(GAP, top)}px`;
+    this.#element.style.left = `${Math.max(GAP, Math.min(left, window.innerWidth - this.#element.offsetWidth - GAP))}px`;
+    this.#element.style.top = `${Math.max(GAP, Math.min(top, window.innerHeight - this.#element.offsetHeight - GAP))}px`;
   }
 }

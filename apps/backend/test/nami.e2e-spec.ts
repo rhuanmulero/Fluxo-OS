@@ -60,6 +60,12 @@ describe('Nami (e2e)', () => {
     await request(app.getHttpServer()).post('/api/me/nami/messages').set('Cookie', cookie).send({ message: 'Continue', conversationId: id }).expect(201);
     expect(gemini.reply).toHaveBeenLastCalledWith(key, 'gemini-test', [{ role: 'user', content: 'Olá' }, { role: 'model', content: 'Olá! Posso ajudar.' }, { role: 'user', content: 'Continue' }]);
   });
+  it('renomeia e fixa a conversa no histórico do proprietário', async () => {
+    await request(app.getHttpServer()).patch(`/api/me/nami/conversations/${id}`).set('Cookie', cookie).send({ title: '  Testes do Fluxo  ', pinned: true }).expect(204);
+    const result = await request(app.getHttpServer()).get('/api/me/nami/conversations').set('Cookie', cookie).expect(200);
+    expect(result.body as unknown).toEqual([expect.objectContaining({ id, title: 'Testes do Fluxo', pinned: true })]);
+    await request(app.getHttpServer()).patch(`/api/me/nami/conversations/${id}`).set('Cookie', otherCookie).send({ pinned: false }).expect(404);
+  });
   it('isola histórico, consulta, envio e exclusão entre usuários', async () => {
     const list = await request(app.getHttpServer()).get('/api/me/nami/conversations').set('Cookie', otherCookie).expect(200);
     expect(list.body as unknown).toEqual([]);
@@ -67,6 +73,33 @@ describe('Nami (e2e)', () => {
     await request(app.getHttpServer()).delete(`/api/me/nami/conversations/${id}`).set('Cookie', otherCookie).expect(404);
     await request(app.getHttpServer()).put('/api/me/nami/settings').set('Cookie', otherCookie).send(settings).expect(200);
     await request(app.getHttpServer()).post('/api/me/nami/messages').set('Cookie', otherCookie).send({ conversationId: id, message: 'Indevido' }).expect(404);
+  });
+  it('envia somente dados autorizados do projeto selecionado ao Gemini', async () => {
+    const prisma = app.get(PrismaService);
+    const owner = await prisma.user.findUniqueOrThrow({ where: { email: emails[0]! } });
+    const other = await prisma.user.findUniqueOrThrow({ where: { email: emails[1]! } });
+    const workspace = await request(app.getHttpServer()).post('/api/workspaces')
+      .set('Cookie', cookie).send({ name: 'Contexto Nami' }).expect(201);
+    const workspaceId = (workspace.body as { id: string }).id;
+    try {
+      const project = await prisma.project.create({
+        data: { workspaceId, name: 'Projeto autorizado', createdById: owner.id },
+      });
+      await prisma.note.createMany({ data: [
+        { workspaceId, projectId: project.id, authorId: owner.id, title: 'Etapa compartilhada', body: 'Revisar documentação', visibility: 'PROJECT' },
+        { workspaceId, projectId: project.id, authorId: other.id, title: 'Privada de outra pessoa', body: 'Não enviar ao Gemini' },
+      ] });
+      await request(app.getHttpServer()).post('/api/me/nami/messages').set('Cookie', cookie)
+        .send({ projectId: project.id, message: 'Quais são as anotações?' }).expect(201);
+      expect(gemini.reply).toHaveBeenLastCalledWith(key, 'gemini-test', expect.any(Array), expect.stringContaining('Etapa compartilhada'));
+      expect(gemini.reply).not.toHaveBeenLastCalledWith(key, 'gemini-test', expect.any(Array), expect.stringContaining('Privada de outra pessoa'));
+      const callCount = gemini.reply.mock.calls.length;
+      await request(app.getHttpServer()).post('/api/me/nami/messages').set('Cookie', otherCookie)
+        .send({ projectId: project.id, message: 'Quais são as anotações?' }).expect(404);
+      expect(gemini.reply).toHaveBeenCalledTimes(callCount);
+    } finally {
+      await prisma.workspace.delete({ where: { id: workspaceId } });
+    }
   });
   it('rejeita mensagens vazias e não salva interação quando o provedor falha', async () => {
     await request(app.getHttpServer()).post('/api/me/nami/messages').set('Cookie', cookie).send({ message: '   ' }).expect(400);

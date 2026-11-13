@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsUUID, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, ValidateIf, IsOptional, IsString, IsUUID, Matches, MaxLength, MinLength } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class NamiSettingsDto {
@@ -25,4 +25,21 @@ export class NamiMessageDto {
   @IsOptional()
   @IsUUID()
   conversationId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  projectId?: string;
+}
+
+export class UpdateNamiConversationDto {
+  @ValidateIf((_object, value: unknown) => value !== undefined)
+  @IsString()
+  @Transform(({ value }: { value: unknown }) => typeof value === 'string' ? value.trim() : value)
+  @MinLength(1)
+  @MaxLength(80)
+  title?: string;
+
+  @ValidateIf((_object, value: unknown) => value !== undefined)
+  @IsBoolean()
+  pinned?: boolean;
 }

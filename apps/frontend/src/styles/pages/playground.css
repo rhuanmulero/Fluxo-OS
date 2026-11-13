@@ -43,10 +43,6 @@
 .modal-content input { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; padding: 12px 14px; color: var(--text-main); font-size: 14px; margin-bottom: 24px; outline: none; transition: border-color 0.2s; }
 .modal-content input:focus { border-color: var(--text-muted); }
 
-.mascot-container { position: absolute; bottom: 48px; right: 48px; width: 56px; height: 56px; display: flex; justify-content: center; align-items: center; background: var(--surface-bg); backdrop-filter: blur(10px); border: 1px solid var(--surface-border); border-radius: 50%; color: var(--text-main); box-shadow: 0 8px 24px rgba(0,0,0,0.1); cursor: pointer; z-index: 50; animation: sleepBreathing 4s ease-in-out infinite; }
-.cat-eye { fill: var(--eye-color); transition: fill 0.3s ease; }
-@keyframes sleepBreathing { 0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(1.05) translateY(-3px); } }
-.mascot-container:hover { animation-play-state: paused; transform: translateY(-2px); }
 
 .pinned-widget-container { position: absolute; top: 48px; left: 48px; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px 20px; border-radius: 16px; min-width: 260px; max-width: 340px; cursor: default; z-index: 20; }
 .pinned-header { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }

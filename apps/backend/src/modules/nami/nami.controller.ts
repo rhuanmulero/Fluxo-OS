@@ -1,9 +1,9 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Put, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthGuard } from '../../common/authorization/auth.guard';
 import { CurrentUser } from '../../common/authorization/current-user.decorator';
 import { AuthenticatedUser } from '../../common/authorization/authenticated-user';
-import { NamiMessageDto, NamiSettingsDto } from './dto/nami.dto';
+import { NamiMessageDto, NamiSettingsDto, UpdateNamiConversationDto } from './dto/nami.dto';
 import { NamiService } from './nami.service';
 
 @Controller('me/nami')
@@ -15,6 +15,11 @@ export class NamiController {
   @Delete('settings') @HttpCode(204) removeKey(@CurrentUser() user: AuthenticatedUser) { return this.nami.removeSettings(user.id); }
   @Get('conversations') list(@CurrentUser() user: AuthenticatedUser) { return this.nami.list(user.id); }
   @Get('conversations/:id') conversation(@CurrentUser() user: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) { return this.nami.conversation(user.id, id); }
+  @Patch('conversations/:id')
+  @HttpCode(204)
+  update(@CurrentUser() user: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateNamiConversationDto) {
+    return this.nami.updateConversation(user.id, id, dto);
+  }
   @Delete('conversations/:id') @HttpCode(204) remove(@CurrentUser() user: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) { return this.nami.removeConversation(user.id, id); }
   @Post('messages')
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
