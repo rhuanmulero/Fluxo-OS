@@ -468,21 +468,19 @@ export default function PomodoroPage() {
             return min + ratio * (max - min);
         }
 
+        let draggingPointer = null;
         handle.addEventListener('pointerdown', (event) => {
-            if (timerEngine.isRunning) return;
+            if (timerEngine.isRunning || event.button !== 0 || draggingPointer !== null) return;
 
             event.preventDefault();
+            draggingPointer = event.pointerId;
             handle.setPointerCapture(event.pointerId);
-
-            const move = (moveEvent) => setMinutes(minutesFromPointer(moveEvent));
-            const release = () => {
-                handle.releasePointerCapture(event.pointerId);
-                handle.removeEventListener('pointermove', move);
-                handle.removeEventListener('pointerup', release);
-            };
-
-            handle.addEventListener('pointermove', move);
-            handle.addEventListener('pointerup', release);
+        });
+        handle.addEventListener('pointermove', (event) => {
+            if (event.pointerId === draggingPointer) setMinutes(minutesFromPointer(event));
+        });
+        handle.addEventListener('lostpointercapture', (event) => {
+            if (event.pointerId === draggingPointer) draggingPointer = null;
         });
 
         handle.addEventListener('keydown', (event) => {
@@ -694,9 +692,16 @@ export default function PomodoroPage() {
             return;
         }
 
-        timerEngine.timeLeft = settings.pomodoroTimes[timerEngine.mode] * 60;
+        const times = settings.pomodoroTimes;
+        timerEngine.timeLeft = times[timerEngine.mode] * 60;
+        for (const [id, minutes] of Object.entries({
+            focus: times.focus, short: times.shortBreak, long: times.longBreak,
+        })) {
+            const input = container.querySelector(`#input-time-${id}`);
+            if (input) input.value = String(minutes);
+        }
         updateDOMTimer(timerEngine.timeLeft);
-        render();
+        updateRing();
     });
 
     workspaceContext.onChange(() => void loadRemoteState().catch(() => undefined));

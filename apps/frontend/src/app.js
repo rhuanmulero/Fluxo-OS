@@ -75,12 +75,14 @@ export default function App() {
 
     const namiChat = new NamiChat();
     let activePage;
+    const routeKey = 'fluxo_active_page';
 
     function navigateTo(pageName) {
         if (activePage !== undefined && activePage !== pageName) {
             namiChat.close({ restoreFocus: false });
         }
         activePage = pageName;
+        sessionStorage.setItem(routeKey, pageName);
         Array.from(mainWrapper.children).forEach(child => child.style.display = 'none');
 
         if (!pagesCache[pageName]) {
@@ -177,7 +179,8 @@ export default function App() {
     shortcuts.register('Alt+Comma', () => settingsPanel.open());
     shortcuts.listen();
 
-    navigateTo('playground');
+    const rememberedPage = sessionStorage.getItem(routeKey);
+    navigateTo(ROUTES.some(route => route.id === rememberedPage) ? rememberedPage : 'playground');
 
     container.appendChild(mainWrapper);
     namiChat.mount(container, () => settingsPanel.open('nami'));

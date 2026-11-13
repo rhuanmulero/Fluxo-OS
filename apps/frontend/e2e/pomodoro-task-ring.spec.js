@@ -47,6 +47,25 @@ test.describe('Anel e tempo por demanda', () => {
     await expect(page.locator('#ring-handle')).toHaveAttribute('aria-valuenow', '26');
   });
 
+  test('arrasta o anel continuamente sem remontar o player do Spotify', async ({ page }) => {
+    await seed(page, 'k16-arraste');
+    await enterWorkspace(page);
+    await gotoRoute(page, 'pomodoro');
+
+    const handle = page.locator('#ring-handle');
+    const player = await page.locator('#spotify-iframe').elementHandle();
+    const ring = await page.locator('.pomo-ring-wrap').boundingBox();
+    const start = await handle.boundingBox();
+    await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(ring.x + ring.width / 2, ring.y + ring.height * 0.95, { steps: 5 });
+    await expect(handle).toHaveAttribute('aria-valuenow', '61');
+    await page.mouse.move(ring.x + ring.width * 0.05, ring.y + ring.height / 2, { steps: 5 });
+    await page.mouse.up();
+    await expect(handle).toHaveAttribute('aria-valuenow', '90');
+    expect(await player.evaluate(element => element === document.querySelector('#spotify-iframe'))).toBe(true);
+  });
+
   test('com o timer rodando o punho nao aceita mudanca', async ({ page }) => {
     await seed(page, 'k16-travado');
     await enterWorkspace(page);

@@ -146,3 +146,19 @@
 
 .nami-empty-chat { justify-content: safe center; overflow-y: auto; }
 .nami-start-title { margin: 0 0 12px; text-align: center; font-size: clamp(19px, 3vw, 24px); font-weight: 500; }
+
+.nami-creation { border: 1px solid var(--surface-border); min-width: min(100%, 280px); }
+.nami-creation-details { margin: 10px 0; border-block: 1px solid var(--surface-border); padding-block: 4px; }
+.nami-creation .nami-creation-details > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr); gap: 12px; margin: 0; padding: 5px 0; font-size: 13px; }
+.nami-creation-details dt { color: var(--text-muted); }
+.nami-creation-details dd { margin: 0; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.nami-creation-actions { justify-content: flex-end; flex-wrap: wrap; }
+
+.nami-creation input { max-width: 100%; }
+.nami-creation p { font-size: 13px; }
+
+.nami-creation > ul { padding-inline-start: 1.25em; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .nami-creation { animation: nami-history-enter 0.18s ease-out; }
+}

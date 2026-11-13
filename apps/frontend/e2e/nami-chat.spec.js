@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { newAccount, signUp } from './support/account.js';
-import { createWorkspace, createProject, enterWorkspace } from './support/shell.js';
+import { apiRequest, createWorkspace, createProject, enterWorkspace } from './support/shell.js';
 
 test('Nami configura chave, conversa, restaura histórico e preserva rascunho após falha', async ({ page }) => {
   await signUp(page, newAccount('nami-ui'));
@@ -135,5 +135,57 @@ test('Nami configura chave, conversa, restaura histórico e preserva rascunho ap
   await panel.getByRole('button', { name: 'Excluir conversa' }).click();
   await panel.getByRole('button', { name: 'Excluir', exact: true }).click();
   await expect(panel.getByText('Você ainda não tem conversas salvas.')).toBeVisible();
+
+  await panel.getByRole('button', { name: 'Voltar ao chat' }).click();
+  await page.route('**/api/me/nami/messages', route => route.fulfill({ json: {
+    id: 'creation-demo',
+    messages: [{ role: 'model', content: 'Revise e confirme para salvar.' }],
+    creation: { kind: 'project', label: 'Projeto', data: { name: 'Projeto criado pela Nami' } },
+  } }));
+  await composer.fill('Crie o projeto Projeto criado pela Nami');
+  await composer.press('Enter');
+  const confirmation = panel.getByRole('button', { name: 'Confirmar criação' });
+  await expect(confirmation).toBeVisible();
+  await expect(panel.locator('.nami-creation dd')).toHaveText('Projeto criado pela Nami');
+  await expect(page.locator('.tasks-sidebar').getByText('Projeto criado pela Nami', { exact: true })).toHaveCount(0);
+  await confirmation.click();
+  await expect(panel.getByText('Projeto salvo com sucesso.')).toBeVisible();
+
+  await expect(page.locator('.tasks-sidebar').getByText('Projeto criado pela Nami', { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.locator('.tasks-sidebar')).toBeVisible();
+
+  const project = await createProject(page, workspace.id, 'Projeto da consulta Nami');
+  const columns = await apiRequest(page, 'GET', `/projects/${project.id}/columns`);
+  const task = await apiRequest(page, 'POST', `/projects/${project.id}/tasks`, {
+    title: 'Revisar entrega Nami', kanbanColumnId: columns[0].id, type: 'BUG', priority: 'LOW',
+  });
+  await page.reload();
+  await page.locator('.tasks-sidebar').getByText('Projeto da consulta Nami', { exact: true }).click();
+  await mascot.press('Enter');
+  await expect(panel).toBeVisible();
+  let action = { kind: 'lookup', label: 'Demanda', data: { resource: 'task', target: task.title } };
+  await page.route('**/api/me/nami/messages', route => route.fulfill({ json: {
+    id: 'actions-demo',
+    messages: [{ role: 'model', content: 'Confira o resultado.' }],
+    creation: action,
+  } }));
+  await composer.fill('A demanda Revisar entrega Nami existe?');
+  await composer.press('Enter');
+  await expect(panel.locator('.nami-creation')).toContainText('1 item encontrado.');
+  await expect(panel.locator('.nami-creation')).toContainText(task.title);
+  action = { kind: 'edit', label: 'Editar demanda', data: {
+    resource: 'task', target: task.title, changes: { priority: 'HIGH' },
+  } };
+  await composer.fill('Mude a prioridade da demanda para alta');
+  await composer.press('Enter');
+  await panel.locator('.nami-creation').getByRole('button', { name: /Revisar entrega Nami/ }).click();
+  await expect(panel.locator('.nami-creation')).toContainText('Baixa → Alta');
+  await expect.poll(async () => (await apiRequest(page, 'GET', `/projects/${project.id}/tasks/${task.id}`)).priority).toBe('LOW');
+  await panel.getByRole('button', { name: 'Confirmar edição' }).click();
+  await expect(panel.getByText('Alteração salva com sucesso.')).toBeVisible();
+  expect(await apiRequest(page, 'GET', `/projects/${project.id}/tasks/${task.id}`)).toMatchObject({
+    title: task.title, type: 'BUG', priority: 'HIGH',
+  });
 
 });

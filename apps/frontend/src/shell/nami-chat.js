@@ -1,3 +1,4 @@
+import { createFromNami, findNamiItems, prepareNamiEdit } from './nami-create.js';
 import { NavigationTooltip } from './navigation-tooltip.js';
 import { includesProjectContext } from '../core/nami-project-preference.js';
 import { workspaceContext } from '../core/workspace-context.js';
@@ -26,6 +27,7 @@ export class NamiChat {
   #settingsCheck = 0;
   #opening = false;
   #conversation = null;
+  #creation = null;
   #busy = false;
   #opener;
 
@@ -138,6 +140,7 @@ export class NamiChat {
     const newConversation = () => {
       if (this.#busy) return;
       this.#conversation = null;
+      this.#creation = null;
       this.#history.querySelector('[aria-current]')?.removeAttribute('aria-current');
       this.#renderMessages([]);
       this.#feedback.textContent = '';
@@ -228,6 +231,7 @@ export class NamiChat {
     this.#showAvailability(configured, message);
     if (configured && this.#panel.classList.contains('nami-with-sidebar')) void this.#loadHistory();
     this.#panel.hidden = false;
+    this.#renderCreation();
     this.#opener?.setAttribute('aria-expanded', 'true');
     const focusTarget = configured && !this.#busy ? 'textarea' : '[data-close]';
     this.#panel.querySelector(focusTarget).focus();
@@ -327,11 +331,196 @@ export class NamiChat {
     reply.removeAttribute('aria-busy');
   }
 
+  #renderLookup(pending) {
+    const box = document.createElement('section');
+    box.className = 'nami-message nami-assistant nami-creation';
+    this.#messages.append(box);
+    const status = document.createElement('p');
+    status.setAttribute('role', 'status');
+    status.textContent = 'Consultando o Fluxo…';
+    box.append(status);
+    const display = item => {
+      const name = item.item.title ?? item.item.name;
+      const details = [item.parent, item.item.status, item.item.priority, item.item.dueDate?.slice(0, 10)].filter(Boolean);
+      return details.length ? name + ' · ' + details.join(' · ') : name;
+    };
+    void (async () => {
+      try {
+        const options = await findNamiItems(pending.proposal.data, pending.scope);
+        if (!box.isConnected) return;
+        const editing = pending.proposal.kind === 'edit';
+        const reorderColumns = editing && pending.proposal.data.resource === 'column' && pending.proposal.data.changes.order;
+        if (!options.length && !reorderColumns) {
+          status.textContent = 'Não encontrei esse item entre os registros disponíveis em ' +
+            (pending.scope.projectName || pending.scope.workspaceName || 'seus espaços') + '.';
+          return;
+        }
+        const showEdit = async selected => {
+          box.replaceChildren(status);
+          status.textContent = 'Preparando a revisão…';
+          try {
+            const edit = await prepareNamiEdit(pending.proposal, pending.scope, selected);
+            if (!box.isConnected || this.#creation !== pending) return;
+            pending.edit = edit;
+            pending.selected = selected.item.title ?? selected.item.name;
+            this.#renderCreation();
+          } catch (error) { status.textContent = error.message; }
+        };
+        if (reorderColumns) {
+          await showEdit({ item: { name: 'Ordem das colunas' } });
+          return;
+        }
+        status.textContent = editing ? 'Selecione o item que deseja editar.' :
+          options.length + (options.length === 1 ? ' item encontrado.' : ' itens encontrados.');
+        const list = document.createElement('ul');
+        for (const option of options.slice(0, 20)) {
+          const row = document.createElement('li');
+          if (editing) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'btn-secondary';
+            button.textContent = display(option);
+            button.addEventListener('click', () => void showEdit(option));
+            row.append(button);
+          } else row.textContent = display(option);
+          list.append(row);
+        }
+        box.append(list);
+        if (options.length > 20) box.append('Refine a busca para ver os outros resultados.');
+        this.#messages.scrollTop = this.#messages.scrollHeight;
+      } catch (error) { status.textContent = error.message; }
+    })();
+  }
+
+  #renderCreation() {
+    this.#messages.querySelector('.nami-creation')?.remove();
+    const pending = this.#creation;
+    if (!pending || pending.conversationId !== this.#conversation?.id) return;
+    const { proposal, scope } = pending;
+    if (proposal.kind === 'lookup' || (proposal.kind === 'edit' && !pending.edit)) {
+      this.#renderLookup(pending);
+      return;
+    }
+    const box = document.createElement('section');
+    box.className = 'nami-message nami-assistant nami-creation';
+    const title = document.createElement('strong');
+    const destination = ['workspace', 'project', 'invite'].includes(proposal.kind) ||
+      (['bookmark', 'document'].includes(proposal.kind) && proposal.data.scope !== 'PROJECT')
+      ? scope.workspaceName : scope.projectName || scope.workspaceName;
+    title.textContent = proposal.label + (pending.selected ? ': ' + pending.selected : '') + (proposal.kind !== 'workspace' && destination ? ' · ' + destination : '');
+    const labels = {
+      participantNames: 'Participantes', order: 'Ordem', logDate: 'Data do registro', logValue: 'Conclusões', logNote: 'Nota do registro',
+      assigneeName: 'Responsável', columnName: 'Coluna', visibility: 'Visibilidade', archived: 'Arquivado',
+      title: 'Título', name: 'Nome', description: 'Descrição', shortDescription: 'Resumo',
+      priority: 'Prioridade', type: 'Tipo', status: 'Status', dueDate: 'Prazo',
+      folder: 'Pasta', tags: 'Etiquetas', estimatedHours: 'Horas estimadas',
+      recurrence: 'Recorrência', color: 'Cor', goal: 'Meta', points: 'Pontos',
+      body: 'Conteúdo', startsAt: 'Início', endsAt: 'Fim', allDay: 'Dia inteiro',
+      frequency: 'Frequência', targetPerPeriod: 'Meta por período', url: 'Endereço',
+      scope: 'Visibilidade', language: 'Linguagem', code: 'Código', role: 'Papel',
+      email: 'E-mail', mode: 'Modo', startedAt: 'Início', endedAt: 'Fim',
+      durationMinutes: 'Duração em minutos', isPinned: 'Fixado', column: 'Coluna', roadmap: 'Roadmap',
+    };
+    const values = {
+      LOW: 'Baixa', MEDIUM: 'Média', HIGH: 'Alta', FEATURE: 'Funcionalidade', BUG: 'Bug',
+      DESIGN: 'Design', REFACTOR: 'Refatoração', OTHER: 'Outro', TODO: 'A fazer',
+      IN_PROGRESS: 'Em progresso', DONE: 'Concluído', PLANNED: 'Planejado',
+      PRIVATE: 'Privado', PROJECT: 'Projeto', WORKSPACE: 'Workspace',
+      NONE: 'Nenhuma', DAILY: 'Diária', WEEKLY: 'Semanal', MONTHLY: 'Mensal',
+      SUPERADMIN: 'Superadmin', ADMIN: 'Admin', MEMBER: 'Membro',
+      FOCUS: 'Foco', SHORT_BREAK: 'Pausa curta', LONG_BREAK: 'Pausa longa',
+    };
+    const enumFields = new Set(['priority', 'type', 'status', 'scope', 'frequency', 'recurrence', 'role', 'mode']);
+    const details = document.createElement('dl');
+    details.className = 'nami-creation-details';
+    const fields = pending.edit ? pending.edit.after : {
+      ...(proposal.kind === 'renameTask'
+        ? { 'Título atual': proposal.data.title, 'Novo título': proposal.data.newTitle }
+        : proposal.data),
+      ...(proposal.kind === 'assignSelf' ? { 'Responsável': 'Você' } : {}),
+      ...(proposal.columnName ? { column: proposal.columnName } : {}),
+      ...(proposal.roadmapTitle ? { roadmap: proposal.roadmapTitle } : {}),
+    };
+    for (const [field, value] of Object.entries(fields)) {
+      if (!pending.edit && (value === null || value === '')) continue;
+      const row = document.createElement('div');
+      const label = document.createElement('dt');
+      const description = document.createElement('dd');
+      label.textContent = labels[field] ?? field;
+      description.textContent = typeof value === 'boolean' ? (value ? 'Sim' : 'Não')
+        : Array.isArray(value) ? value.join(', ')
+        : enumFields.has(field) ? (values[value] ?? String(value)) : String(value);
+      if (pending.edit) {
+        const prior = pending.edit.before[field];
+        description.textContent = (prior == null || prior === '' ? 'Não definido' : String(values[prior] ?? prior))
+          + ' → ' + (description.textContent || 'Em branco');
+      }
+      row.append(label, description);
+      details.append(row);
+    }
+    const actions = document.createElement('div');
+    actions.className = 'settings-row nami-creation-actions';
+    const cancel = document.createElement('button');
+    cancel.className = 'btn-secondary';
+    cancel.textContent = 'Cancelar';
+    const confirm = document.createElement('button');
+    confirm.className = 'btn-primary';
+    confirm.textContent = pending.edit ? 'Confirmar edição' : proposal.kind === 'assignSelf' ? 'Confirmar atribuição' : proposal.kind === 'renameTask' ? 'Confirmar novo título' : 'Confirmar criação';
+    const feedback = document.createElement('p');
+    feedback.setAttribute('role', 'status');
+    const file = document.createElement('input');
+    file.type = 'file';
+    file.setAttribute('aria-label', 'Arquivo do documento');
+    box.append(title, details);
+    if (proposal.kind === 'document') {
+      confirm.disabled = true;
+      file.addEventListener('change', () => { confirm.disabled = !file.files.length; });
+      box.append(file);
+    }
+    actions.append(cancel, confirm);
+    box.append(actions, feedback);
+    this.#messages.append(box);
+    this.#messages.scrollTop = this.#messages.scrollHeight;
+    cancel.addEventListener('click', () => {
+      this.#creation = null;
+      box.remove();
+    });
+    confirm.addEventListener('click', async () => {
+      if (this.#busy || confirm.disabled || this.#creation !== pending) return;
+      this.#pending(true);
+      confirm.disabled = cancel.disabled = file.disabled = true;
+      try {
+        await (pending.edit ? pending.edit.save() : createFromNami(proposal, scope, file.files[0]));
+        this.#creation = null;
+        box.replaceChildren();
+        const result = document.createElement('p');
+        result.textContent = pending.edit ? 'Alteração salva com sucesso.' : proposal.kind === 'assignSelf' ? 'Demanda atribuída a você.' : proposal.kind === 'renameTask' ? 'Demanda renomeada com sucesso.' : proposal.label + ' salvo com sucesso.';
+        box.append(result);
+        if (proposal.kind !== 'workspace') {
+          void workspaceContext.reload().catch(() => {
+            result.textContent += ' Atualize a página para ver a mudança.';
+          });
+        }
+      } catch (error) {
+        feedback.textContent = error.message;
+        confirm.disabled = cancel.disabled = file.disabled = false;
+      } finally {
+        this.#pending(false);
+      }
+    });
+  }
+
   async #send() {
     const input = this.#form.querySelector('textarea');
     const message = input.value.trim();
     if (this.#busy || this.#content.hidden || !message) return;
     const draft = input.value;
+    const scope = {
+      workspaceId: workspaceContext.workspaceId,
+      workspaceName: workspaceContext.workspaceName,
+      projectId: workspaceContext.projectId,
+      projectName: workspaceContext.project?.name,
+    };
     const previousMessages = this.#conversation?.messages ?? [];
     this.#pending(true);
     input.value = '';
@@ -346,8 +535,10 @@ export class NamiChat {
         ...(projectId ? { projectId } : {}),
       });
       this.#conversation = result;
+      this.#creation = result.creation ? { proposal: result.creation, scope, conversationId: result.id } : null;
       if (this.#panel.classList.contains('nami-with-sidebar')) void this.#loadHistory();
       await this.#revealReply(result.messages);
+      this.#renderCreation();
       this.#feedback.textContent = '';
     } catch (error) {
       this.#renderMessages(previousMessages);
@@ -488,6 +679,7 @@ export class NamiChat {
       this.#history.querySelector('[aria-current]')?.removeAttribute('aria-current');
       title.setAttribute('aria-current', 'true');
       this.#renderMessages(conversation.messages);
+      this.#renderCreation();
       this.#form.reset();
       this.#feedback.textContent = '';
       this.#showView('chat');

@@ -1,3 +1,4 @@
+import { readCreation } from './nami-creation';
 import { NamiProjectContextService } from './nami-project-context.service';
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/database/prisma.service';
@@ -68,17 +69,19 @@ export class NamiService {
       ];
       const args = [this.keys.decrypt(settings.encryptedKey), settings.model, messages] as const;
       const answer = context ? await this.gemini.reply(...args, JSON.stringify(context)) : await this.gemini.reply(...args);
+      const creation = readCreation(answer);
       // Persistimos o par apenas após sucesso: falhas não deixam mensagens incompletas.
-      return await this.prisma.$transaction(async tx => {
+      const saved = await this.prisma.$transaction(async tx => {
         const target = conversation
           ? await tx.namiConversation.update({ where: { id: conversation.id, userId }, data: { updatedAt: new Date() } })
           : await tx.namiConversation.create({ data: { userId, title: dto.message.slice(0, 80) } });
         await tx.namiMessage.createMany({ data: [
           { conversationId: target.id, role: 'user', content: dto.message, position: history.length },
-          { conversationId: target.id, role: 'model', content: answer, position: history.length + 1 },
+          { conversationId: target.id, role: 'model', content: creation.text, position: history.length + 1 },
         ] });
         return tx.namiConversation.findUniqueOrThrow({ where: { id: target.id }, include: { messages: { orderBy: { position: 'asc' } } } });
       });
+      return { ...saved, ...(creation.proposal ? { creation: creation.proposal } : {}) };
     } finally { this.busy.delete(userId); }
   }
 }
